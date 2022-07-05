@@ -97,7 +97,7 @@ func (fs *readBenchFS) ReadDir(ctx context.Context, op *fuseops.ReadDirOp) error
 		return nil
 	}
 	entries := []fuseutil.Dirent{
-		fuseutil.Dirent{
+		{
 			Offset: 1,
 			Inode:  2,
 			Name:   "test",
