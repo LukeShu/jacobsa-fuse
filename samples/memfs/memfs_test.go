@@ -1749,17 +1749,13 @@ func (t *MemFSTest) RenameOverExistingDirectory() {
 	err = os.Rename(newPath, oldPath)
 	ExpectThat(err, Error(MatchesRegexp("not empty|file exists")))
 
-	// As of Go 1.8 this shouldn't work the other way around either (see
-	// https://github.com/golang/go/commit/321c312).
-	if atLeastGo18 {
-		err = os.Rename(oldPath, newPath)
-		ExpectThat(err, Error(HasSubstr("file exists")))
+	err = os.Rename(oldPath, newPath)
+	ExpectThat(err, Error(HasSubstr("file exists")))
 
-		// Both should still be present in the parent listing.
-		entries, err := fusetesting.ReadDirPicky(t.Dir)
-		AssertEq(nil, err)
-		ExpectEq(2, len(entries))
-	}
+	// Both should still be present in the parent listing.
+	entries, err := fusetesting.ReadDirPicky(t.Dir)
+	AssertEq(nil, err)
+	ExpectEq(2, len(entries))
 }
 
 func (t *MemFSTest) RenameOverExisting_WrongType() {
