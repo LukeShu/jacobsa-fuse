@@ -9,7 +9,7 @@ on:
       - '*'
 
 jobs:
-  gofmt:
+  lint:
     runs-on: ubuntu-20.04
 
     steps:
@@ -25,10 +25,7 @@ jobs:
     # 2. `gofmt -l`: to test there is a diff in the codebase. This is because
     #    `gofmt` exits with exit status 0 even if there is a diff.
     #     This is recommended in https://github.com/golang/go/issues/24230)
-    - name: Run gofmt
-      run: |
-        gofmt -d .
-        test -z $(gofmt -l .)
+    - run: make lint
 
   linux-tests:
     runs-on: ubuntu-20.04
