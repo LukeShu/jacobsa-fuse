@@ -24,7 +24,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	. "github.com/jacobsa/ogletest"
+	"github.com/jacobsa/ogletest"
 	"github.com/jacobsa/syncutil"
 )
 
@@ -69,29 +69,29 @@ func RunCreateInParallelTest_NoTruncate(
 		}
 
 		err := b.Join()
-		AssertEq(nil, err)
+		ogletest.AssertEq(nil, err)
 
 		// Read the contents of the file. We should see each worker's ID once.
 		contents, err := ioutil.ReadFile(filename)
-		AssertEq(nil, err)
+		ogletest.AssertEq(nil, err)
 
 		idsSeen := make(map[byte]struct{})
 		for i := range contents {
 			id := contents[i]
-			AssertLt(id, numWorkers)
+			ogletest.AssertLt(id, numWorkers)
 
 			if _, ok := idsSeen[id]; ok {
-				AddFailure("Duplicate ID: %d", id)
+				ogletest.AddFailure("Duplicate ID: %d", id)
 			}
 
 			idsSeen[id] = struct{}{}
 		}
 
-		AssertEq(numWorkers, len(idsSeen))
+		ogletest.AssertEq(numWorkers, len(idsSeen))
 
 		// Delete the file.
 		err = os.Remove(filename)
-		AssertEq(nil, err)
+		ogletest.AssertEq(nil, err)
 	}
 }
 
@@ -139,31 +139,31 @@ func RunCreateInParallelTest_Truncate(
 		}
 
 		err := b.Join()
-		AssertEq(nil, err)
+		ogletest.AssertEq(nil, err)
 
 		// Read the contents of the file. We should see at least one ID (the last
 		// one that truncated), and at most all of them.
 		contents, err := ioutil.ReadFile(filename)
-		AssertEq(nil, err)
+		ogletest.AssertEq(nil, err)
 
 		idsSeen := make(map[byte]struct{})
 		for i := range contents {
 			id := contents[i]
-			AssertLt(id, numWorkers)
+			ogletest.AssertLt(id, numWorkers)
 
 			if _, ok := idsSeen[id]; ok {
-				AddFailure("Duplicate ID: %d", id)
+				ogletest.AddFailure("Duplicate ID: %d", id)
 			}
 
 			idsSeen[id] = struct{}{}
 		}
 
-		AssertGe(len(idsSeen), 1)
-		AssertLe(len(idsSeen), numWorkers)
+		ogletest.AssertGe(len(idsSeen), 1)
+		ogletest.AssertLe(len(idsSeen), numWorkers)
 
 		// Delete the file.
 		err = os.Remove(filename)
-		AssertEq(nil, err)
+		ogletest.AssertEq(nil, err)
 	}
 }
 
@@ -221,21 +221,21 @@ func RunCreateInParallelTest_Exclusive(
 		}
 
 		err := b.Join()
-		AssertEq(nil, err)
+		ogletest.AssertEq(nil, err)
 
 		// Exactly one worker should have opened successfully.
-		AssertEq(1, openCount)
+		ogletest.AssertEq(1, openCount)
 
 		// Read the contents of the file. It should contain that one worker's ID.
 		contents, err := ioutil.ReadFile(filename)
-		AssertEq(nil, err)
+		ogletest.AssertEq(nil, err)
 
-		AssertEq(1, len(contents))
-		AssertLt(contents[0], numWorkers)
+		ogletest.AssertEq(1, len(contents))
+		ogletest.AssertLt(contents[0], numWorkers)
 
 		// Delete the file.
 		err = os.Remove(filename)
-		AssertEq(nil, err)
+		ogletest.AssertEq(nil, err)
 	}
 }
 
@@ -276,17 +276,17 @@ func RunMkdirInParallelTest(
 		}
 
 		err := b.Join()
-		AssertEq(nil, err)
+		ogletest.AssertEq(nil, err)
 
 		// The directory should have been created, once.
 		entries, err := ReadDirPicky(dir)
-		AssertEq(nil, err)
-		AssertEq(1, len(entries))
-		AssertEq("foo", entries[0].Name())
+		ogletest.AssertEq(nil, err)
+		ogletest.AssertEq(1, len(entries))
+		ogletest.AssertEq("foo", entries[0].Name())
 
 		// Delete the directory.
 		err = os.Remove(filename)
-		AssertEq(nil, err)
+		ogletest.AssertEq(nil, err)
 	}
 }
 
@@ -329,17 +329,17 @@ func RunSymlinkInParallelTest(
 		}
 
 		err := b.Join()
-		AssertEq(nil, err)
+		ogletest.AssertEq(nil, err)
 
 		// The symlink should have been created, once.
 		entries, err := ReadDirPicky(dir)
-		AssertEq(nil, err)
-		AssertEq(1, len(entries))
-		AssertEq("foo", entries[0].Name())
+		ogletest.AssertEq(nil, err)
+		ogletest.AssertEq(1, len(entries))
+		ogletest.AssertEq("foo", entries[0].Name())
 
 		// Delete the directory.
 		err = os.Remove(filename)
-		AssertEq(nil, err)
+		ogletest.AssertEq(nil, err)
 	}
 }
 
@@ -356,7 +356,7 @@ func RunHardlinkInParallelTest(
 	const contents = "Hello\x00world"
 
 	err := ioutil.WriteFile(originalFile, []byte(contents), 0444)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Try for awhile to see if anything breaks.
 	const duration = 500 * time.Millisecond
@@ -388,21 +388,21 @@ func RunHardlinkInParallelTest(
 		}
 
 		err := b.Join()
-		AssertEq(nil, err)
+		ogletest.AssertEq(nil, err)
 
 		// The symlink should have been created, once.
 		entries, err := ReadDirPicky(dir)
-		AssertEq(nil, err)
-		AssertEq(2, len(entries))
-		AssertEq("foo", entries[0].Name())
-		AssertEq("original_file", entries[1].Name())
+		ogletest.AssertEq(nil, err)
+		ogletest.AssertEq(2, len(entries))
+		ogletest.AssertEq("foo", entries[0].Name())
+		ogletest.AssertEq("original_file", entries[1].Name())
 
 		// Remove the link.
 		err = os.Remove(filename)
-		AssertEq(nil, err)
+		ogletest.AssertEq(nil, err)
 	}
 
 	// Clean up the original file at the end.
 	err = os.Remove(originalFile)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 }

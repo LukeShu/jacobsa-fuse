@@ -30,10 +30,10 @@ import (
 	"github.com/jacobsa/fuse/fuseutil"
 	"github.com/jacobsa/fuse/samples"
 	"github.com/jacobsa/fuse/samples/statfs"
-	. "github.com/jacobsa/ogletest"
+	"github.com/jacobsa/ogletest"
 )
 
-func TestStatFS(t *testing.T) { RunTests(t) }
+func TestStatFS(t *testing.T) { ogletest.RunTests(t) }
 
 const fsName = "some_fs_name"
 const volumeName = "Some volume"
@@ -106,12 +106,12 @@ type StatFSTest struct {
 	canonicalDir string
 }
 
-var _ SetUpInterface = &StatFSTest{}
-var _ TearDownInterface = &StatFSTest{}
+var _ ogletest.SetUpInterface = &StatFSTest{}
+var _ ogletest.TearDownInterface = &StatFSTest{}
 
-func init() { RegisterTestSuite(&StatFSTest{}) }
+func init() { ogletest.RegisterTestSuite(&StatFSTest{}) }
 
-func (t *StatFSTest) SetUp(ti *TestInfo) {
+func (t *StatFSTest) SetUp(ti *ogletest.TestInfo) {
 	var err error
 
 	// Writeback caching can ruin our measurement of the write sizes the kernel
@@ -132,7 +132,7 @@ func (t *StatFSTest) SetUp(ti *TestInfo) {
 
 	// Canonicalize the mount point.
 	t.canonicalDir, err = filepath.EvalSymlinks(t.Dir)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 	t.canonicalDir = path.Clean(t.canonicalDir)
 }
 
@@ -160,11 +160,11 @@ func (t *StatFSTest) CapacityAndFreeSpace() {
 
 		// Call df.
 		capacity, used, available, err := df(t.canonicalDir)
-		AssertEq(nil, err)
+		ogletest.AssertEq(nil, err)
 
-		ExpectEq(bs*canned.Blocks, capacity, "%s", desc)
-		ExpectEq(bs*(canned.Blocks-canned.BlocksFree), used, "%s", desc)
-		ExpectEq(bs*canned.BlocksAvailable, available, "%s", desc)
+		ogletest.ExpectEq(bs*canned.Blocks, capacity, "%s", desc)
+		ogletest.ExpectEq(bs*(canned.Blocks-canned.BlocksFree), used, "%s", desc)
+		ogletest.ExpectEq(bs*canned.BlocksAvailable, available, "%s", desc)
 	}
 }
 
@@ -188,19 +188,19 @@ func (t *StatFSTest) WriteSize() {
 		bytes.Repeat([]byte{'x'}, 1<<22),
 		0400)
 
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Despite the small block size, the OS shouldn't have given us pitifully
 	// small chunks of data.
 	switch runtime.GOOS {
 	case "linux":
-		ExpectEq(1<<20, t.fs.MostRecentWriteSize())
+		ogletest.ExpectEq(1<<20, t.fs.MostRecentWriteSize())
 
 	case "darwin":
-		ExpectEq(1<<20, t.fs.MostRecentWriteSize())
+		ogletest.ExpectEq(1<<20, t.fs.MostRecentWriteSize())
 
 	default:
-		AddFailure("Unhandled OS: %s", runtime.GOOS)
+		ogletest.AddFailure("Unhandled OS: %s", runtime.GOOS)
 	}
 }
 
@@ -214,13 +214,13 @@ func (t *StatFSTest) StatBlocks() {
 		path.Join(t.Dir, fileName),
 		bytes.Repeat([]byte{'x'}, size),
 		0400)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	t.fs.SetStatResponse(fuseops.InodeAttributes{
 		Size: size,
 	})
 
 	err = syscall.Stat(path.Join(t.Dir, fileName), &stat)
-	AssertEq(nil, err)
-	ExpectEq(size/512, stat.Blocks)
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq(size/512, stat.Blocks)
 }

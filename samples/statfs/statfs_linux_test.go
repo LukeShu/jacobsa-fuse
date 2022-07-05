@@ -21,7 +21,7 @@ import (
 	"syscall"
 
 	"github.com/jacobsa/fuse/fuseops"
-	. "github.com/jacobsa/ogletest"
+	"github.com/jacobsa/ogletest"
 )
 
 // Sample output:
@@ -43,15 +43,15 @@ func (t *StatFSTest) Syscall_ZeroValues() {
 	// zero value for each field. The assertions below act as documentation for
 	// the OS's behavior in this case.
 	err = syscall.Statfs(t.Dir, &stat)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
-	ExpectEq(0, stat.Bsize)
-	ExpectEq(0, stat.Frsize)
-	ExpectEq(0, stat.Blocks)
-	ExpectEq(0, stat.Bfree)
-	ExpectEq(0, stat.Bavail)
-	ExpectEq(0, stat.Files)
-	ExpectEq(0, stat.Ffree)
+	ogletest.ExpectEq(0, stat.Bsize)
+	ogletest.ExpectEq(0, stat.Frsize)
+	ogletest.ExpectEq(0, stat.Blocks)
+	ogletest.ExpectEq(0, stat.Bfree)
+	ogletest.ExpectEq(0, stat.Bavail)
+	ogletest.ExpectEq(0, stat.Files)
+	ogletest.ExpectEq(0, stat.Ffree)
 }
 
 func (t *StatFSTest) Syscall_NonZeroValues() {
@@ -75,15 +75,15 @@ func (t *StatFSTest) Syscall_NonZeroValues() {
 
 	// Stat.
 	err = syscall.Statfs(t.Dir, &stat)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
-	ExpectEq(canned.BlockSize, stat.Frsize)
-	ExpectEq(canned.IoSize, stat.Bsize)
-	ExpectEq(canned.Blocks, stat.Blocks)
-	ExpectEq(canned.BlocksFree, stat.Bfree)
-	ExpectEq(canned.BlocksAvailable, stat.Bavail)
-	ExpectEq(canned.Inodes, stat.Files)
-	ExpectEq(canned.InodesFree, stat.Ffree)
+	ogletest.ExpectEq(canned.BlockSize, stat.Frsize)
+	ogletest.ExpectEq(canned.IoSize, stat.Bsize)
+	ogletest.ExpectEq(canned.Blocks, stat.Blocks)
+	ogletest.ExpectEq(canned.BlocksFree, stat.Bfree)
+	ogletest.ExpectEq(canned.BlocksAvailable, stat.Bavail)
+	ogletest.ExpectEq(canned.Inodes, stat.Files)
+	ogletest.ExpectEq(canned.InodesFree, stat.Ffree)
 }
 
 func (t *StatFSTest) BlockSizes() {
@@ -117,9 +117,9 @@ func (t *StatFSTest) BlockSizes() {
 		// Check.
 		var stat syscall.Statfs_t
 		err = syscall.Statfs(t.Dir, &stat)
-		AssertEq(nil, err)
+		ogletest.AssertEq(nil, err)
 
-		ExpectEq(bs, stat.Frsize, "%s", desc)
+		ogletest.ExpectEq(bs, stat.Frsize, "%s", desc)
 	}
 }
 
@@ -154,8 +154,8 @@ func (t *StatFSTest) IoSizes() {
 		// Check.
 		var stat syscall.Statfs_t
 		err = syscall.Statfs(t.Dir, &stat)
-		AssertEq(nil, err)
+		ogletest.AssertEq(nil, err)
 
-		ExpectEq(bs, stat.Bsize, "%s", desc)
+		ogletest.ExpectEq(bs, stat.Bsize, "%s", desc)
 	}
 }

@@ -25,11 +25,11 @@ import (
 	"github.com/jacobsa/fuse/fuseutil"
 	"github.com/jacobsa/fuse/samples"
 	"github.com/jacobsa/fuse/samples/interruptfs"
-	. "github.com/jacobsa/oglematchers"
-	. "github.com/jacobsa/ogletest"
+	"github.com/jacobsa/oglematchers"
+	"github.com/jacobsa/ogletest"
 )
 
-func TestInterruptFS(t *testing.T) { RunTests(t) }
+func TestInterruptFS(t *testing.T) { ogletest.RunTests(t) }
 
 ////////////////////////////////////////////////////////////////////////
 // Boilerplate
@@ -40,17 +40,17 @@ type InterruptFSTest struct {
 	fs *interruptfs.InterruptFS
 }
 
-func init() { RegisterTestSuite(&InterruptFSTest{}) }
+func init() { ogletest.RegisterTestSuite(&InterruptFSTest{}) }
 
-var _ SetUpInterface = &InterruptFSTest{}
-var _ TearDownInterface = &InterruptFSTest{}
+var _ ogletest.SetUpInterface = &InterruptFSTest{}
+var _ ogletest.TearDownInterface = &InterruptFSTest{}
 
-func (t *InterruptFSTest) SetUp(ti *TestInfo) {
+func (t *InterruptFSTest) SetUp(ti *ogletest.TestInfo) {
 	var err error
 
 	// Create the file system.
 	t.fs = interruptfs.New()
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	t.Server = fuseutil.NewFileSystemServer(t.fs)
 
@@ -64,11 +64,11 @@ func (t *InterruptFSTest) SetUp(ti *TestInfo) {
 
 func (t *InterruptFSTest) StatFoo() {
 	fi, err := os.Stat(path.Join(t.Dir, "foo"))
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
-	ExpectEq("foo", fi.Name())
-	ExpectEq(0777, fi.Mode())
-	ExpectFalse(fi.IsDir())
+	ogletest.ExpectEq("foo", fi.Name())
+	ogletest.ExpectEq(0777, fi.Mode())
+	ogletest.ExpectFalse(fi.IsDir())
 }
 
 func (t *InterruptFSTest) InterruptedDuringRead() {
@@ -83,7 +83,7 @@ func (t *InterruptFSTest) InterruptedDuringRead() {
 	cmd.Stderr = &cmdOutput
 
 	err = cmd.Start()
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Wait for the command in the background, writing to a channel when it is
 	// finished.
@@ -98,8 +98,8 @@ func (t *InterruptFSTest) InterruptedDuringRead() {
 	// The command should be hanging on the read, and not yet have returned.
 	select {
 	case err = <-cmdErr:
-		AddFailure("Command returned early with error: %v", err)
-		AbortTest()
+		ogletest.AddFailure("Command returned early with error: %v", err)
+		ogletest.AbortTest()
 
 	case <-time.After(10 * time.Millisecond):
 	}
@@ -109,8 +109,8 @@ func (t *InterruptFSTest) InterruptedDuringRead() {
 
 	// Now the command should return, with an appropriate error.
 	err = <-cmdErr
-	ExpectThat(err, Error(HasSubstr("signal")))
-	ExpectThat(err, Error(HasSubstr("interrupt")))
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("signal")))
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("interrupt")))
 }
 
 func (t *InterruptFSTest) InterruptedDuringFlush() {
@@ -125,7 +125,7 @@ func (t *InterruptFSTest) InterruptedDuringFlush() {
 	cmd.Stderr = &cmdOutput
 
 	err = cmd.Start()
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Wait for the command in the background, writing to a channel when it is
 	// finished.
@@ -140,8 +140,8 @@ func (t *InterruptFSTest) InterruptedDuringFlush() {
 	// The command should be hanging on the flush, and not yet have returned.
 	select {
 	case err = <-cmdErr:
-		AddFailure("Command returned early with error: %v", err)
-		AbortTest()
+		ogletest.AddFailure("Command returned early with error: %v", err)
+		ogletest.AbortTest()
 
 	case <-time.After(10 * time.Millisecond):
 	}
@@ -151,6 +151,6 @@ func (t *InterruptFSTest) InterruptedDuringFlush() {
 
 	// Now the command should return, with an appropriate error.
 	err = <-cmdErr
-	ExpectThat(err, Error(HasSubstr("signal")))
-	ExpectThat(err, Error(HasSubstr("interrupt")))
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("signal")))
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("interrupt")))
 }

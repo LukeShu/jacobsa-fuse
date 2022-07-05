@@ -27,12 +27,12 @@ import (
 	"github.com/jacobsa/fuse/fuseutil"
 	"github.com/jacobsa/fuse/samples"
 	"github.com/jacobsa/fuse/samples/cachingfs"
-	. "github.com/jacobsa/oglematchers"
-	. "github.com/jacobsa/ogletest"
+	"github.com/jacobsa/oglematchers"
+	"github.com/jacobsa/ogletest"
 	"github.com/jacobsa/timeutil"
 )
 
-func TestCachingFS(t *testing.T) { RunTests(t) }
+func TestCachingFS(t *testing.T) { ogletest.RunTests(t) }
 
 ////////////////////////////////////////////////////////////////////////
 // Boilerplate
@@ -45,10 +45,10 @@ type cachingFSTest struct {
 	initialMtime time.Time
 }
 
-var _ TearDownInterface = &cachingFSTest{}
+var _ ogletest.TearDownInterface = &cachingFSTest{}
 
 func (t *cachingFSTest) setUp(
-	ti *TestInfo,
+	ti *ogletest.TestInfo,
 	lookupEntryTimeout time.Duration,
 	getattrTimeout time.Duration) {
 	var err error
@@ -59,7 +59,7 @@ func (t *cachingFSTest) setUp(
 
 	// Create the file system.
 	t.fs, err = cachingfs.NewCachingFS(lookupEntryTimeout, getattrTimeout)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	t.Server = fuseutil.NewFileSystemServer(t.fs)
 
@@ -75,13 +75,13 @@ func (t *cachingFSTest) statAll() (foo, dir, bar os.FileInfo) {
 	var err error
 
 	foo, err = os.Stat(path.Join(t.Dir, "foo"))
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	dir, err = os.Stat(path.Join(t.Dir, "dir"))
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	bar, err = os.Stat(path.Join(t.Dir, "dir/bar"))
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	return foo, dir, bar
 }
@@ -90,13 +90,13 @@ func (t *cachingFSTest) openFiles() (foo, dir, bar *os.File) {
 	var err error
 
 	foo, err = os.Open(path.Join(t.Dir, "foo"))
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	dir, err = os.Open(path.Join(t.Dir, "dir"))
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	bar, err = os.Open(path.Join(t.Dir, "dir/bar"))
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	return foo, dir, bar
 }
@@ -106,13 +106,13 @@ func (t *cachingFSTest) statFiles(
 	var err error
 
 	foo, err = f.Stat()
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	dir, err = g.Stat()
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	bar, err = h.Stat()
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	return foo, dir, bar
 }
@@ -129,11 +129,11 @@ type BasicsTest struct {
 	cachingFSTest
 }
 
-var _ SetUpInterface = &BasicsTest{}
+var _ ogletest.SetUpInterface = &BasicsTest{}
 
-func init() { RegisterTestSuite(&BasicsTest{}) }
+func init() { ogletest.RegisterTestSuite(&BasicsTest{}) }
 
-func (t *BasicsTest) SetUp(ti *TestInfo) {
+func (t *BasicsTest) SetUp(ti *ogletest.TestInfo) {
 	const (
 		lookupEntryTimeout = 0
 		getattrTimeout     = 0
@@ -154,47 +154,47 @@ func (t *BasicsTest) StatNonexistent() {
 	for _, n := range names {
 		_, err := os.Stat(path.Join(t.Dir, n))
 
-		AssertNe(nil, err)
-		ExpectTrue(os.IsNotExist(err), "n: %s, err: %v", n, err)
+		ogletest.AssertNe(nil, err)
+		ogletest.ExpectTrue(os.IsNotExist(err), "n: %s, err: %v", n, err)
 	}
 }
 
 func (t *BasicsTest) StatFoo() {
 	fi, err := os.Stat(path.Join(t.Dir, "foo"))
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
-	ExpectEq("foo", fi.Name())
-	ExpectEq(cachingfs.FooSize, fi.Size())
-	ExpectEq(0777, fi.Mode())
-	ExpectThat(fi.ModTime(), timeutil.TimeEq(t.initialMtime))
-	ExpectFalse(fi.IsDir())
-	ExpectEq(t.fs.FooID(), getInodeID(fi))
-	ExpectEq(1, fi.Sys().(*syscall.Stat_t).Nlink)
+	ogletest.ExpectEq("foo", fi.Name())
+	ogletest.ExpectEq(cachingfs.FooSize, fi.Size())
+	ogletest.ExpectEq(0777, fi.Mode())
+	ogletest.ExpectThat(fi.ModTime(), timeutil.TimeEq(t.initialMtime))
+	ogletest.ExpectFalse(fi.IsDir())
+	ogletest.ExpectEq(t.fs.FooID(), getInodeID(fi))
+	ogletest.ExpectEq(1, fi.Sys().(*syscall.Stat_t).Nlink)
 }
 
 func (t *BasicsTest) StatDir() {
 	fi, err := os.Stat(path.Join(t.Dir, "dir"))
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
-	ExpectEq("dir", fi.Name())
-	ExpectEq(os.ModeDir|0777, fi.Mode())
-	ExpectThat(fi.ModTime(), timeutil.TimeEq(t.initialMtime))
-	ExpectTrue(fi.IsDir())
-	ExpectEq(t.fs.DirID(), getInodeID(fi))
-	ExpectEq(1, fi.Sys().(*syscall.Stat_t).Nlink)
+	ogletest.ExpectEq("dir", fi.Name())
+	ogletest.ExpectEq(os.ModeDir|0777, fi.Mode())
+	ogletest.ExpectThat(fi.ModTime(), timeutil.TimeEq(t.initialMtime))
+	ogletest.ExpectTrue(fi.IsDir())
+	ogletest.ExpectEq(t.fs.DirID(), getInodeID(fi))
+	ogletest.ExpectEq(1, fi.Sys().(*syscall.Stat_t).Nlink)
 }
 
 func (t *BasicsTest) StatBar() {
 	fi, err := os.Stat(path.Join(t.Dir, "dir/bar"))
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
-	ExpectEq("bar", fi.Name())
-	ExpectEq(cachingfs.BarSize, fi.Size())
-	ExpectEq(0777, fi.Mode())
-	ExpectThat(fi.ModTime(), timeutil.TimeEq(t.initialMtime))
-	ExpectFalse(fi.IsDir())
-	ExpectEq(t.fs.BarID(), getInodeID(fi))
-	ExpectEq(1, fi.Sys().(*syscall.Stat_t).Nlink)
+	ogletest.ExpectEq("bar", fi.Name())
+	ogletest.ExpectEq(cachingfs.BarSize, fi.Size())
+	ogletest.ExpectEq(0777, fi.Mode())
+	ogletest.ExpectThat(fi.ModTime(), timeutil.TimeEq(t.initialMtime))
+	ogletest.ExpectFalse(fi.IsDir())
+	ogletest.ExpectEq(t.fs.BarID(), getInodeID(fi))
+	ogletest.ExpectEq(1, fi.Sys().(*syscall.Stat_t).Nlink)
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -205,11 +205,11 @@ type NoCachingTest struct {
 	cachingFSTest
 }
 
-var _ SetUpInterface = &NoCachingTest{}
+var _ ogletest.SetUpInterface = &NoCachingTest{}
 
-func init() { RegisterTestSuite(&NoCachingTest{}) }
+func init() { ogletest.RegisterTestSuite(&NoCachingTest{}) }
 
-func (t *NoCachingTest) SetUp(ti *TestInfo) {
+func (t *NoCachingTest) SetUp(ti *ogletest.TestInfo) {
 	const (
 		lookupEntryTimeout = 0
 		getattrTimeout     = 0
@@ -223,13 +223,13 @@ func (t *NoCachingTest) StatStat() {
 	fooAfter, dirAfter, barAfter := t.statAll()
 
 	// Make sure everything matches.
-	ExpectThat(fooAfter.ModTime(), timeutil.TimeEq(fooBefore.ModTime()))
-	ExpectThat(dirAfter.ModTime(), timeutil.TimeEq(dirBefore.ModTime()))
-	ExpectThat(barAfter.ModTime(), timeutil.TimeEq(barBefore.ModTime()))
+	ogletest.ExpectThat(fooAfter.ModTime(), timeutil.TimeEq(fooBefore.ModTime()))
+	ogletest.ExpectThat(dirAfter.ModTime(), timeutil.TimeEq(dirBefore.ModTime()))
+	ogletest.ExpectThat(barAfter.ModTime(), timeutil.TimeEq(barBefore.ModTime()))
 
-	ExpectEq(getInodeID(fooBefore), getInodeID(fooAfter))
-	ExpectEq(getInodeID(dirBefore), getInodeID(dirAfter))
-	ExpectEq(getInodeID(barBefore), getInodeID(barAfter))
+	ogletest.ExpectEq(getInodeID(fooBefore), getInodeID(fooAfter))
+	ogletest.ExpectEq(getInodeID(dirBefore), getInodeID(dirAfter))
+	ogletest.ExpectEq(getInodeID(barBefore), getInodeID(barAfter))
 }
 
 func (t *NoCachingTest) StatRenumberStat() {
@@ -239,9 +239,9 @@ func (t *NoCachingTest) StatRenumberStat() {
 
 	// We should see the new inode IDs, because the entries should not have been
 	// cached.
-	ExpectEq(t.fs.FooID(), getInodeID(fooAfter))
-	ExpectEq(t.fs.DirID(), getInodeID(dirAfter))
-	ExpectEq(t.fs.BarID(), getInodeID(barAfter))
+	ogletest.ExpectEq(t.fs.FooID(), getInodeID(fooAfter))
+	ogletest.ExpectEq(t.fs.DirID(), getInodeID(dirAfter))
+	ogletest.ExpectEq(t.fs.BarID(), getInodeID(barAfter))
 }
 
 func (t *NoCachingTest) StatMtimeStat() {
@@ -253,9 +253,9 @@ func (t *NoCachingTest) StatMtimeStat() {
 
 	// We should see the new mtimes, because the attributes should not have been
 	// cached.
-	ExpectThat(fooAfter.ModTime(), timeutil.TimeEq(newMtime))
-	ExpectThat(dirAfter.ModTime(), timeutil.TimeEq(newMtime))
-	ExpectThat(barAfter.ModTime(), timeutil.TimeEq(newMtime))
+	ogletest.ExpectThat(fooAfter.ModTime(), timeutil.TimeEq(newMtime))
+	ogletest.ExpectThat(dirAfter.ModTime(), timeutil.TimeEq(newMtime))
+	ogletest.ExpectThat(barAfter.ModTime(), timeutil.TimeEq(newMtime))
 }
 
 func (t *NoCachingTest) StatRenumberMtimeStat() {
@@ -268,13 +268,13 @@ func (t *NoCachingTest) StatRenumberMtimeStat() {
 
 	// We should see the new inode IDs and mtimes, because nothing should have
 	// been cached.
-	ExpectEq(t.fs.FooID(), getInodeID(fooAfter))
-	ExpectEq(t.fs.DirID(), getInodeID(dirAfter))
-	ExpectEq(t.fs.BarID(), getInodeID(barAfter))
+	ogletest.ExpectEq(t.fs.FooID(), getInodeID(fooAfter))
+	ogletest.ExpectEq(t.fs.DirID(), getInodeID(dirAfter))
+	ogletest.ExpectEq(t.fs.BarID(), getInodeID(barAfter))
 
-	ExpectThat(fooAfter.ModTime(), timeutil.TimeEq(newMtime))
-	ExpectThat(dirAfter.ModTime(), timeutil.TimeEq(newMtime))
-	ExpectThat(barAfter.ModTime(), timeutil.TimeEq(newMtime))
+	ogletest.ExpectThat(fooAfter.ModTime(), timeutil.TimeEq(newMtime))
+	ogletest.ExpectThat(dirAfter.ModTime(), timeutil.TimeEq(newMtime))
+	ogletest.ExpectThat(barAfter.ModTime(), timeutil.TimeEq(newMtime))
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -286,11 +286,11 @@ type EntryCachingTest struct {
 	lookupEntryTimeout time.Duration
 }
 
-var _ SetUpInterface = &EntryCachingTest{}
+var _ ogletest.SetUpInterface = &EntryCachingTest{}
 
-func init() { RegisterTestSuite(&EntryCachingTest{}) }
+func init() { ogletest.RegisterTestSuite(&EntryCachingTest{}) }
 
-func (t *EntryCachingTest) SetUp(ti *TestInfo) {
+func (t *EntryCachingTest) SetUp(ti *ogletest.TestInfo) {
 	t.lookupEntryTimeout = 250 * time.Millisecond
 	t.SampleTest.MountConfig.EnableVnodeCaching = true
 
@@ -302,13 +302,13 @@ func (t *EntryCachingTest) StatStat() {
 	fooAfter, dirAfter, barAfter := t.statAll()
 
 	// Make sure everything matches.
-	ExpectThat(fooAfter.ModTime(), timeutil.TimeEq(fooBefore.ModTime()))
-	ExpectThat(dirAfter.ModTime(), timeutil.TimeEq(dirBefore.ModTime()))
-	ExpectThat(barAfter.ModTime(), timeutil.TimeEq(barBefore.ModTime()))
+	ogletest.ExpectThat(fooAfter.ModTime(), timeutil.TimeEq(fooBefore.ModTime()))
+	ogletest.ExpectThat(dirAfter.ModTime(), timeutil.TimeEq(dirBefore.ModTime()))
+	ogletest.ExpectThat(barAfter.ModTime(), timeutil.TimeEq(barBefore.ModTime()))
 
-	ExpectEq(getInodeID(fooBefore), getInodeID(fooAfter))
-	ExpectEq(getInodeID(dirBefore), getInodeID(dirAfter))
-	ExpectEq(getInodeID(barBefore), getInodeID(barAfter))
+	ogletest.ExpectEq(getInodeID(fooBefore), getInodeID(fooAfter))
+	ogletest.ExpectEq(getInodeID(dirBefore), getInodeID(dirAfter))
+	ogletest.ExpectEq(getInodeID(barBefore), getInodeID(barAfter))
 }
 
 func (t *EntryCachingTest) StatRenumberStat() {
@@ -318,9 +318,9 @@ func (t *EntryCachingTest) StatRenumberStat() {
 
 	// We should still see the old inode IDs, because the inode entries should
 	// have been cached.
-	ExpectEq(getInodeID(fooBefore), getInodeID(fooAfter))
-	ExpectEq(getInodeID(dirBefore), getInodeID(dirAfter))
-	ExpectEq(getInodeID(barBefore), getInodeID(barAfter))
+	ogletest.ExpectEq(getInodeID(fooBefore), getInodeID(fooAfter))
+	ogletest.ExpectEq(getInodeID(dirBefore), getInodeID(dirAfter))
+	ogletest.ExpectEq(getInodeID(barBefore), getInodeID(barAfter))
 
 	// But after waiting for the entry cache to expire, we should see the new
 	// IDs.
@@ -331,9 +331,9 @@ func (t *EntryCachingTest) StatRenumberStat() {
 		time.Sleep(2 * t.lookupEntryTimeout)
 		fooAfter, dirAfter, barAfter = t.statAll()
 
-		ExpectEq(t.fs.FooID(), getInodeID(fooAfter))
-		ExpectEq(t.fs.DirID(), getInodeID(dirAfter))
-		ExpectEq(t.fs.BarID(), getInodeID(barAfter))
+		ogletest.ExpectEq(t.fs.FooID(), getInodeID(fooAfter))
+		ogletest.ExpectEq(t.fs.DirID(), getInodeID(dirAfter))
+		ogletest.ExpectEq(t.fs.BarID(), getInodeID(barAfter))
 	}
 }
 
@@ -346,9 +346,9 @@ func (t *EntryCachingTest) StatMtimeStat() {
 
 	// We should see the new mtimes, because the attributes should not have been
 	// cached.
-	ExpectThat(fooAfter.ModTime(), timeutil.TimeEq(newMtime))
-	ExpectThat(dirAfter.ModTime(), timeutil.TimeEq(newMtime))
-	ExpectThat(barAfter.ModTime(), timeutil.TimeEq(newMtime))
+	ogletest.ExpectThat(fooAfter.ModTime(), timeutil.TimeEq(newMtime))
+	ogletest.ExpectThat(dirAfter.ModTime(), timeutil.TimeEq(newMtime))
+	ogletest.ExpectThat(barAfter.ModTime(), timeutil.TimeEq(newMtime))
 }
 
 func (t *EntryCachingTest) StatRenumberMtimeStat() {
@@ -361,13 +361,13 @@ func (t *EntryCachingTest) StatRenumberMtimeStat() {
 
 	// We should still see the old inode IDs, because the inode entries should
 	// have been cached. But the attributes should not have been.
-	ExpectEq(getInodeID(fooBefore), getInodeID(fooAfter))
-	ExpectEq(getInodeID(dirBefore), getInodeID(dirAfter))
-	ExpectEq(getInodeID(barBefore), getInodeID(barAfter))
+	ogletest.ExpectEq(getInodeID(fooBefore), getInodeID(fooAfter))
+	ogletest.ExpectEq(getInodeID(dirBefore), getInodeID(dirAfter))
+	ogletest.ExpectEq(getInodeID(barBefore), getInodeID(barAfter))
 
-	ExpectThat(fooAfter.ModTime(), timeutil.TimeEq(newMtime))
-	ExpectThat(dirAfter.ModTime(), timeutil.TimeEq(newMtime))
-	ExpectThat(barAfter.ModTime(), timeutil.TimeEq(newMtime))
+	ogletest.ExpectThat(fooAfter.ModTime(), timeutil.TimeEq(newMtime))
+	ogletest.ExpectThat(dirAfter.ModTime(), timeutil.TimeEq(newMtime))
+	ogletest.ExpectThat(barAfter.ModTime(), timeutil.TimeEq(newMtime))
 
 	// After waiting for the entry cache to expire, we should see fresh
 	// everything.
@@ -378,13 +378,13 @@ func (t *EntryCachingTest) StatRenumberMtimeStat() {
 		time.Sleep(2 * t.lookupEntryTimeout)
 		fooAfter, dirAfter, barAfter = t.statAll()
 
-		ExpectEq(t.fs.FooID(), getInodeID(fooAfter))
-		ExpectEq(t.fs.DirID(), getInodeID(dirAfter))
-		ExpectEq(t.fs.BarID(), getInodeID(barAfter))
+		ogletest.ExpectEq(t.fs.FooID(), getInodeID(fooAfter))
+		ogletest.ExpectEq(t.fs.DirID(), getInodeID(dirAfter))
+		ogletest.ExpectEq(t.fs.BarID(), getInodeID(barAfter))
 
-		ExpectThat(fooAfter.ModTime(), timeutil.TimeEq(newMtime))
-		ExpectThat(dirAfter.ModTime(), timeutil.TimeEq(newMtime))
-		ExpectThat(barAfter.ModTime(), timeutil.TimeEq(newMtime))
+		ogletest.ExpectThat(fooAfter.ModTime(), timeutil.TimeEq(newMtime))
+		ogletest.ExpectThat(dirAfter.ModTime(), timeutil.TimeEq(newMtime))
+		ogletest.ExpectThat(barAfter.ModTime(), timeutil.TimeEq(newMtime))
 	}
 }
 
@@ -397,11 +397,11 @@ type AttributeCachingTest struct {
 	getattrTimeout time.Duration
 }
 
-var _ SetUpInterface = &AttributeCachingTest{}
+var _ ogletest.SetUpInterface = &AttributeCachingTest{}
 
-func init() { RegisterTestSuite(&AttributeCachingTest{}) }
+func init() { ogletest.RegisterTestSuite(&AttributeCachingTest{}) }
 
-func (t *AttributeCachingTest) SetUp(ti *TestInfo) {
+func (t *AttributeCachingTest) SetUp(ti *ogletest.TestInfo) {
 	t.getattrTimeout = 250 * time.Millisecond
 	t.cachingFSTest.setUp(ti, 0, t.getattrTimeout)
 }
@@ -411,13 +411,13 @@ func (t *AttributeCachingTest) StatStat() {
 	fooAfter, dirAfter, barAfter := t.statAll()
 
 	// Make sure everything matches.
-	ExpectThat(fooAfter.ModTime(), timeutil.TimeEq(fooBefore.ModTime()))
-	ExpectThat(dirAfter.ModTime(), timeutil.TimeEq(dirBefore.ModTime()))
-	ExpectThat(barAfter.ModTime(), timeutil.TimeEq(barBefore.ModTime()))
+	ogletest.ExpectThat(fooAfter.ModTime(), timeutil.TimeEq(fooBefore.ModTime()))
+	ogletest.ExpectThat(dirAfter.ModTime(), timeutil.TimeEq(dirBefore.ModTime()))
+	ogletest.ExpectThat(barAfter.ModTime(), timeutil.TimeEq(barBefore.ModTime()))
 
-	ExpectEq(getInodeID(fooBefore), getInodeID(fooAfter))
-	ExpectEq(getInodeID(dirBefore), getInodeID(dirAfter))
-	ExpectEq(getInodeID(barBefore), getInodeID(barAfter))
+	ogletest.ExpectEq(getInodeID(fooBefore), getInodeID(fooAfter))
+	ogletest.ExpectEq(getInodeID(dirBefore), getInodeID(dirAfter))
+	ogletest.ExpectEq(getInodeID(barBefore), getInodeID(barAfter))
 }
 
 func (t *AttributeCachingTest) StatRenumberStat() {
@@ -427,9 +427,9 @@ func (t *AttributeCachingTest) StatRenumberStat() {
 
 	// We should see the new inode IDs, because the entries should not have been
 	// cached.
-	ExpectEq(t.fs.FooID(), getInodeID(fooAfter))
-	ExpectEq(t.fs.DirID(), getInodeID(dirAfter))
-	ExpectEq(t.fs.BarID(), getInodeID(barAfter))
+	ogletest.ExpectEq(t.fs.FooID(), getInodeID(fooAfter))
+	ogletest.ExpectEq(t.fs.DirID(), getInodeID(dirAfter))
+	ogletest.ExpectEq(t.fs.BarID(), getInodeID(barAfter))
 }
 
 func (t *AttributeCachingTest) StatMtimeStat_ViaPath() {
@@ -443,10 +443,10 @@ func (t *AttributeCachingTest) StatMtimeStat_ViaPath() {
 	// the entry again. With the lookup we returned new attributes, so it's
 	// possible that the mtime will be fresh. On Linux it appears to be, and on
 	// OS X it appears to not be.
-	m := AnyOf(timeutil.TimeEq(newMtime), timeutil.TimeEq(t.initialMtime))
-	ExpectThat(fooAfter.ModTime(), m)
-	ExpectThat(dirAfter.ModTime(), m)
-	ExpectThat(barAfter.ModTime(), m)
+	m := oglematchers.AnyOf(timeutil.TimeEq(newMtime), timeutil.TimeEq(t.initialMtime))
+	ogletest.ExpectThat(fooAfter.ModTime(), m)
+	ogletest.ExpectThat(dirAfter.ModTime(), m)
+	ogletest.ExpectThat(barAfter.ModTime(), m)
 }
 
 func (t *AttributeCachingTest) StatMtimeStat_ViaFileDescriptor() {
@@ -465,18 +465,18 @@ func (t *AttributeCachingTest) StatMtimeStat_ViaFileDescriptor() {
 	fooAfter, dirAfter, barAfter := t.statFiles(foo, dir, bar)
 
 	// We should still see the old cached mtime.
-	ExpectThat(fooAfter.ModTime(), timeutil.TimeEq(fooBefore.ModTime()))
-	ExpectThat(dirAfter.ModTime(), timeutil.TimeEq(dirBefore.ModTime()))
-	ExpectThat(barAfter.ModTime(), timeutil.TimeEq(barBefore.ModTime()))
+	ogletest.ExpectThat(fooAfter.ModTime(), timeutil.TimeEq(fooBefore.ModTime()))
+	ogletest.ExpectThat(dirAfter.ModTime(), timeutil.TimeEq(dirBefore.ModTime()))
+	ogletest.ExpectThat(barAfter.ModTime(), timeutil.TimeEq(barBefore.ModTime()))
 
 	// After waiting for the attribute cache to expire, we should see the fresh
 	// mtime.
 	time.Sleep(2 * t.getattrTimeout)
 	fooAfter, dirAfter, barAfter = t.statFiles(foo, dir, bar)
 
-	ExpectThat(fooAfter.ModTime(), timeutil.TimeEq(newMtime))
-	ExpectThat(dirAfter.ModTime(), timeutil.TimeEq(newMtime))
-	ExpectThat(barAfter.ModTime(), timeutil.TimeEq(newMtime))
+	ogletest.ExpectThat(fooAfter.ModTime(), timeutil.TimeEq(newMtime))
+	ogletest.ExpectThat(dirAfter.ModTime(), timeutil.TimeEq(newMtime))
+	ogletest.ExpectThat(barAfter.ModTime(), timeutil.TimeEq(newMtime))
 }
 
 func (t *AttributeCachingTest) StatRenumberMtimeStat_ViaPath() {
@@ -490,13 +490,13 @@ func (t *AttributeCachingTest) StatRenumberMtimeStat_ViaPath() {
 	// We should see new everything, because this is the first time the new
 	// inodes have been encountered. Entries for the old ones should not have
 	// been cached, because we have entry caching disabled.
-	ExpectEq(t.fs.FooID(), getInodeID(fooAfter))
-	ExpectEq(t.fs.DirID(), getInodeID(dirAfter))
-	ExpectEq(t.fs.BarID(), getInodeID(barAfter))
+	ogletest.ExpectEq(t.fs.FooID(), getInodeID(fooAfter))
+	ogletest.ExpectEq(t.fs.DirID(), getInodeID(dirAfter))
+	ogletest.ExpectEq(t.fs.BarID(), getInodeID(barAfter))
 
-	ExpectThat(fooAfter.ModTime(), timeutil.TimeEq(newMtime))
-	ExpectThat(dirAfter.ModTime(), timeutil.TimeEq(newMtime))
-	ExpectThat(barAfter.ModTime(), timeutil.TimeEq(newMtime))
+	ogletest.ExpectThat(fooAfter.ModTime(), timeutil.TimeEq(newMtime))
+	ogletest.ExpectThat(dirAfter.ModTime(), timeutil.TimeEq(newMtime))
+	ogletest.ExpectThat(barAfter.ModTime(), timeutil.TimeEq(newMtime))
 }
 
 func (t *AttributeCachingTest) StatRenumberMtimeStat_ViaFileDescriptor() {
@@ -516,26 +516,26 @@ func (t *AttributeCachingTest) StatRenumberMtimeStat_ViaFileDescriptor() {
 	fooAfter, dirAfter, barAfter := t.statFiles(foo, dir, bar)
 
 	// We should still see the old cached mtime with the old inode ID.
-	ExpectEq(getInodeID(fooBefore), getInodeID(fooAfter))
-	ExpectEq(getInodeID(dirBefore), getInodeID(dirAfter))
-	ExpectEq(getInodeID(barBefore), getInodeID(barAfter))
+	ogletest.ExpectEq(getInodeID(fooBefore), getInodeID(fooAfter))
+	ogletest.ExpectEq(getInodeID(dirBefore), getInodeID(dirAfter))
+	ogletest.ExpectEq(getInodeID(barBefore), getInodeID(barAfter))
 
-	ExpectThat(fooAfter.ModTime(), timeutil.TimeEq(fooBefore.ModTime()))
-	ExpectThat(dirAfter.ModTime(), timeutil.TimeEq(dirBefore.ModTime()))
-	ExpectThat(barAfter.ModTime(), timeutil.TimeEq(barBefore.ModTime()))
+	ogletest.ExpectThat(fooAfter.ModTime(), timeutil.TimeEq(fooBefore.ModTime()))
+	ogletest.ExpectThat(dirAfter.ModTime(), timeutil.TimeEq(dirBefore.ModTime()))
+	ogletest.ExpectThat(barAfter.ModTime(), timeutil.TimeEq(barBefore.ModTime()))
 
 	// After waiting for the attribute cache to expire, we should see the fresh
 	// mtime, still with the old inode ID.
 	time.Sleep(2 * t.getattrTimeout)
 	fooAfter, dirAfter, barAfter = t.statFiles(foo, dir, bar)
 
-	ExpectEq(getInodeID(fooBefore), getInodeID(fooAfter))
-	ExpectEq(getInodeID(dirBefore), getInodeID(dirAfter))
-	ExpectEq(getInodeID(barBefore), getInodeID(barAfter))
+	ogletest.ExpectEq(getInodeID(fooBefore), getInodeID(fooAfter))
+	ogletest.ExpectEq(getInodeID(dirBefore), getInodeID(dirAfter))
+	ogletest.ExpectEq(getInodeID(barBefore), getInodeID(barAfter))
 
-	ExpectThat(fooAfter.ModTime(), timeutil.TimeEq(newMtime))
-	ExpectThat(dirAfter.ModTime(), timeutil.TimeEq(newMtime))
-	ExpectThat(barAfter.ModTime(), timeutil.TimeEq(newMtime))
+	ogletest.ExpectThat(fooAfter.ModTime(), timeutil.TimeEq(newMtime))
+	ogletest.ExpectThat(dirAfter.ModTime(), timeutil.TimeEq(newMtime))
+	ogletest.ExpectThat(barAfter.ModTime(), timeutil.TimeEq(newMtime))
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -546,11 +546,11 @@ type PageCacheTest struct {
 	cachingFSTest
 }
 
-var _ SetUpInterface = &PageCacheTest{}
+var _ ogletest.SetUpInterface = &PageCacheTest{}
 
-func init() { RegisterTestSuite(&PageCacheTest{}) }
+func init() { ogletest.RegisterTestSuite(&PageCacheTest{}) }
 
-func (t *PageCacheTest) SetUp(ti *TestInfo) {
+func (t *PageCacheTest) SetUp(ti *ogletest.TestInfo) {
 	const (
 		lookupEntryTimeout = 0
 		getattrTimeout     = 0
@@ -564,28 +564,28 @@ func (t *PageCacheTest) SingleFileHandle_NoKeepCache() {
 
 	// Open the file.
 	f, err := os.Open(path.Join(t.Dir, "foo"))
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	defer f.Close()
 
 	// Read its contents once.
 	f.Seek(0, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	c1, err := ioutil.ReadAll(f)
-	AssertEq(nil, err)
-	AssertEq(cachingfs.FooSize, len(c1))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(cachingfs.FooSize, len(c1))
 
 	// And again.
 	f.Seek(0, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	c2, err := ioutil.ReadAll(f)
-	AssertEq(nil, err)
-	AssertEq(cachingfs.FooSize, len(c2))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(cachingfs.FooSize, len(c2))
 
 	// We should have seen the same contents each time.
-	ExpectTrue(bytes.Equal(c1, c2))
+	ogletest.ExpectTrue(bytes.Equal(c1, c2))
 }
 
 func (t *PageCacheTest) SingleFileHandle_KeepCache() {
@@ -593,28 +593,28 @@ func (t *PageCacheTest) SingleFileHandle_KeepCache() {
 
 	// Open the file.
 	f, err := os.Open(path.Join(t.Dir, "foo"))
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	defer f.Close()
 
 	// Read its contents once.
 	f.Seek(0, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	c1, err := ioutil.ReadAll(f)
-	AssertEq(nil, err)
-	AssertEq(cachingfs.FooSize, len(c1))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(cachingfs.FooSize, len(c1))
 
 	// And again.
 	f.Seek(0, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	c2, err := ioutil.ReadAll(f)
-	AssertEq(nil, err)
-	AssertEq(cachingfs.FooSize, len(c2))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(cachingfs.FooSize, len(c2))
 
 	// We should have seen the same contents each time.
-	ExpectTrue(bytes.Equal(c1, c2))
+	ogletest.ExpectTrue(bytes.Equal(c1, c2))
 }
 
 func (t *PageCacheTest) TwoFileHandles_NoKeepCache() {
@@ -628,56 +628,56 @@ func (t *PageCacheTest) TwoFileHandles_NoKeepCache() {
 
 	// Open the file.
 	f1, err := os.Open(path.Join(t.Dir, "foo"))
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	defer f1.Close()
 
 	// Read its contents once.
 	f1.Seek(0, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	c1, err := ioutil.ReadAll(f1)
-	AssertEq(nil, err)
-	AssertEq(cachingfs.FooSize, len(c1))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(cachingfs.FooSize, len(c1))
 
 	// Open a second handle.
 	f2, err := os.Open(path.Join(t.Dir, "foo"))
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	defer f2.Close()
 
 	// We should see different contents if we read from that handle, due to the
 	// cache being invalidated at the time of opening.
 	f2.Seek(0, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	c2, err := ioutil.ReadAll(f2)
-	AssertEq(nil, err)
-	AssertEq(cachingfs.FooSize, len(c2))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(cachingfs.FooSize, len(c2))
 
-	ExpectFalse(bytes.Equal(c1, c2))
+	ogletest.ExpectFalse(bytes.Equal(c1, c2))
 
 	// Another read from the second handle should give the same result as the
 	// first one from that handle.
 	f2.Seek(0, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	c3, err := ioutil.ReadAll(f2)
-	AssertEq(nil, err)
-	AssertEq(cachingfs.FooSize, len(c3))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(cachingfs.FooSize, len(c3))
 
-	ExpectTrue(bytes.Equal(c2, c3))
+	ogletest.ExpectTrue(bytes.Equal(c2, c3))
 
 	// And another read from the first handle should give the same result yet
 	// again.
 	f1.Seek(0, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	c4, err := ioutil.ReadAll(f1)
-	AssertEq(nil, err)
-	AssertEq(cachingfs.FooSize, len(c4))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(cachingfs.FooSize, len(c4))
 
-	ExpectTrue(bytes.Equal(c2, c4))
+	ogletest.ExpectTrue(bytes.Equal(c2, c4))
 }
 
 func (t *PageCacheTest) TwoFileHandles_KeepCache() {
@@ -685,41 +685,41 @@ func (t *PageCacheTest) TwoFileHandles_KeepCache() {
 
 	// Open the file.
 	f1, err := os.Open(path.Join(t.Dir, "foo"))
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	defer f1.Close()
 
 	// Read its contents once.
 	f1.Seek(0, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	c1, err := ioutil.ReadAll(f1)
-	AssertEq(nil, err)
-	AssertEq(cachingfs.FooSize, len(c1))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(cachingfs.FooSize, len(c1))
 
 	// Open a second handle.
 	f2, err := os.Open(path.Join(t.Dir, "foo"))
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	defer f2.Close()
 
 	// We should see the same contents when we read via the second handle.
 	f2.Seek(0, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	c2, err := ioutil.ReadAll(f2)
-	AssertEq(nil, err)
-	AssertEq(cachingfs.FooSize, len(c2))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(cachingfs.FooSize, len(c2))
 
-	ExpectTrue(bytes.Equal(c1, c2))
+	ogletest.ExpectTrue(bytes.Equal(c1, c2))
 
 	// Ditto if we read again from the first.
 	f1.Seek(0, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	c3, err := ioutil.ReadAll(f1)
-	AssertEq(nil, err)
-	AssertEq(cachingfs.FooSize, len(c3))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(cachingfs.FooSize, len(c3))
 
-	ExpectTrue(bytes.Equal(c1, c3))
+	ogletest.ExpectTrue(bytes.Equal(c1, c3))
 }

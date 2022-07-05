@@ -28,11 +28,11 @@ import (
 	"testing"
 
 	"github.com/jacobsa/fuse/fusetesting"
-	. "github.com/jacobsa/oglematchers"
-	. "github.com/jacobsa/ogletest"
+	"github.com/jacobsa/oglematchers"
+	"github.com/jacobsa/ogletest"
 )
 
-func TestPosix(t *testing.T) { RunTests(t) }
+func TestPosix(t *testing.T) { ogletest.RunTests(t) }
 
 ////////////////////////////////////////////////////////////////////////
 // Helpers
@@ -57,12 +57,12 @@ type PosixTest struct {
 	toClose []io.Closer
 }
 
-var _ SetUpInterface = &PosixTest{}
-var _ TearDownInterface = &PosixTest{}
+var _ ogletest.SetUpInterface = &PosixTest{}
+var _ ogletest.TearDownInterface = &PosixTest{}
 
-func init() { RegisterTestSuite(&PosixTest{}) }
+func init() { ogletest.RegisterTestSuite(&PosixTest{}) }
 
-func (t *PosixTest) SetUp(ti *TestInfo) {
+func (t *PosixTest) SetUp(ti *ogletest.TestInfo) {
 	var err error
 
 	t.ctx = ti.Ctx
@@ -105,21 +105,21 @@ func (t *PosixTest) WriteOverlapsEndOfFile() {
 	// Create a file.
 	f, err := os.Create(path.Join(t.dir, "foo"))
 	t.toClose = append(t.toClose, f)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Make it 4 bytes long.
 	err = f.Truncate(4)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Write the range [2, 6).
 	n, err = f.WriteAt([]byte("taco"), 2)
-	AssertEq(nil, err)
-	AssertEq(4, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(4, n)
 
 	// Read the full contents of the file.
 	contents, err := ioutil.ReadAll(f)
-	AssertEq(nil, err)
-	ExpectEq("\x00\x00taco", string(contents))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq("\x00\x00taco", string(contents))
 }
 
 func (t *PosixTest) WriteStartsAtEndOfFile() {
@@ -129,21 +129,21 @@ func (t *PosixTest) WriteStartsAtEndOfFile() {
 	// Create a file.
 	f, err := os.Create(path.Join(t.dir, "foo"))
 	t.toClose = append(t.toClose, f)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Make it 2 bytes long.
 	err = f.Truncate(2)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Write the range [2, 6).
 	n, err = f.WriteAt([]byte("taco"), 2)
-	AssertEq(nil, err)
-	AssertEq(4, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(4, n)
 
 	// Read the full contents of the file.
 	contents, err := ioutil.ReadAll(f)
-	AssertEq(nil, err)
-	ExpectEq("\x00\x00taco", string(contents))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq("\x00\x00taco", string(contents))
 }
 
 func (t *PosixTest) WriteStartsPastEndOfFile() {
@@ -153,17 +153,17 @@ func (t *PosixTest) WriteStartsPastEndOfFile() {
 	// Create a file.
 	f, err := os.Create(path.Join(t.dir, "foo"))
 	t.toClose = append(t.toClose, f)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Write the range [2, 6).
 	n, err = f.WriteAt([]byte("taco"), 2)
-	AssertEq(nil, err)
-	AssertEq(4, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(4, n)
 
 	// Read the full contents of the file.
 	contents, err := ioutil.ReadAll(f)
-	AssertEq(nil, err)
-	ExpectEq("\x00\x00taco", string(contents))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq("\x00\x00taco", string(contents))
 }
 
 func (t *PosixTest) WriteStartsPastEndOfFile_AppendMode() {
@@ -177,17 +177,17 @@ func (t *PosixTest) WriteStartsPastEndOfFile_AppendMode() {
 		0600)
 
 	t.toClose = append(t.toClose, f)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Write three bytes.
 	n, err = f.Write([]byte("111"))
-	AssertEq(nil, err)
-	AssertEq(3, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(3, n)
 
 	// Write at offset six.
 	n, err = syscall.Pwrite(int(f.Fd()), []byte("222"), 6)
-	AssertEq(nil, err)
-	AssertEq(3, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(3, n)
 
 	// Read the full contents of the file.
 	//
@@ -199,12 +199,12 @@ func (t *PosixTest) WriteStartsPastEndOfFile_AppendMode() {
 	//     the end of the file, regardless of the value of offset.
 	//
 	contents, err := ioutil.ReadFile(f.Name())
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	if runtime.GOOS == "linux" {
-		ExpectEq("111222", string(contents))
+		ogletest.ExpectEq("111222", string(contents))
 	} else {
-		ExpectEq("111\x00\x00\x00222", string(contents))
+		ogletest.ExpectEq("111\x00\x00\x00222", string(contents))
 	}
 }
 
@@ -215,25 +215,25 @@ func (t *PosixTest) WriteAtDoesntChangeOffset_NotAppendMode() {
 	// Create a file.
 	f, err := os.Create(path.Join(t.dir, "foo"))
 	t.toClose = append(t.toClose, f)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Make it 16 bytes long.
 	err = f.Truncate(16)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Seek to offset 4.
 	_, err = f.Seek(4, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Write the range [10, 14).
 	n, err = f.WriteAt([]byte("taco"), 2)
-	AssertEq(nil, err)
-	AssertEq(4, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(4, n)
 
 	// We should still be at offset 4.
 	offset, err := getFileOffset(f)
-	AssertEq(nil, err)
-	ExpectEq(4, offset)
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq(4, offset)
 }
 
 func (t *PosixTest) WriteAtDoesntChangeOffset_AppendMode() {
@@ -247,25 +247,25 @@ func (t *PosixTest) WriteAtDoesntChangeOffset_AppendMode() {
 		0600)
 
 	t.toClose = append(t.toClose, f)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Make it 16 bytes long.
 	err = f.Truncate(16)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Seek to offset 4.
 	_, err = f.Seek(4, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Write the range [10, 14).
 	n, err = syscall.Pwrite(int(f.Fd()), []byte("taco"), 10)
-	AssertEq(nil, err)
-	AssertEq(4, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(4, n)
 
 	// We should still be at offset 4.
 	offset, err := getFileOffset(f)
-	AssertEq(nil, err)
-	ExpectEq(4, offset)
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq(4, offset)
 }
 
 func (t *PosixTest) AppendMode() {
@@ -277,35 +277,35 @@ func (t *PosixTest) AppendMode() {
 	// Create a file with some contents.
 	fileName := path.Join(t.dir, "foo")
 	err = ioutil.WriteFile(fileName, []byte("Jello, "), 0600)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Open the file in append mode.
 	f, err := os.OpenFile(fileName, os.O_RDWR|os.O_APPEND, 0600)
 	t.toClose = append(t.toClose, f)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Seek to somewhere silly and then write.
 	off, err = f.Seek(2, 0)
-	AssertEq(nil, err)
-	AssertEq(2, off)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(2, off)
 
 	n, err = f.Write([]byte("world!"))
-	AssertEq(nil, err)
-	AssertEq(6, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(6, n)
 
 	// The offset should have been updated to point at the end of the file.
 	off, err = getFileOffset(f)
-	AssertEq(nil, err)
-	ExpectEq(13, off)
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq(13, off)
 
 	// A random write should still work, without updating the offset.
 	n, err = syscall.Pwrite(int(f.Fd()), []byte("H"), 0)
-	AssertEq(nil, err)
-	AssertEq(1, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(1, n)
 
 	off, err = getFileOffset(f)
-	AssertEq(nil, err)
-	ExpectEq(13, off)
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq(13, off)
 
 	// Read back the contents of the file, which should be correct even though we
 	// seeked to a silly place before writing the world part.
@@ -319,12 +319,12 @@ func (t *PosixTest) AppendMode() {
 	//
 	// So we allow either the POSIX result or the Linux result.
 	n, err = f.ReadAt(buf, 0)
-	AssertEq(io.EOF, err)
+	ogletest.AssertEq(io.EOF, err)
 
 	if runtime.GOOS == "linux" {
-		ExpectEq("Jello, world!H", string(buf[:n]))
+		ogletest.ExpectEq("Jello, world!H", string(buf[:n]))
 	} else {
-		ExpectEq("Hello, world!", string(buf[:n]))
+		ogletest.ExpectEq("Hello, world!", string(buf[:n]))
 	}
 }
 
@@ -336,30 +336,30 @@ func (t *PosixTest) ReadsPastEndOfFile() {
 	// Create a file.
 	f, err := os.Create(path.Join(t.dir, "foo"))
 	t.toClose = append(t.toClose, f)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Give it some contents.
 	n, err = f.Write([]byte("taco"))
-	AssertEq(nil, err)
-	AssertEq(4, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(4, n)
 
 	// Read a range overlapping EOF.
 	n, err = f.ReadAt(buf[:4], 2)
-	AssertEq(io.EOF, err)
-	ExpectEq(2, n)
-	ExpectEq("co", string(buf[:n]))
+	ogletest.AssertEq(io.EOF, err)
+	ogletest.ExpectEq(2, n)
+	ogletest.ExpectEq("co", string(buf[:n]))
 
 	// Read a range starting at EOF.
 	n, err = f.ReadAt(buf[:4], 4)
-	AssertEq(io.EOF, err)
-	ExpectEq(0, n)
-	ExpectEq("", string(buf[:n]))
+	ogletest.AssertEq(io.EOF, err)
+	ogletest.ExpectEq(0, n)
+	ogletest.ExpectEq("", string(buf[:n]))
 
 	// Read a range starting past EOF.
 	n, err = f.ReadAt(buf[:4], 100)
-	AssertEq(io.EOF, err)
-	ExpectEq(0, n)
-	ExpectEq("", string(buf[:n]))
+	ogletest.AssertEq(io.EOF, err)
+	ogletest.ExpectEq(0, n)
+	ogletest.ExpectEq("", string(buf[:n]))
 }
 
 func (t *PosixTest) HardLinkDirectory() {
@@ -367,14 +367,14 @@ func (t *PosixTest) HardLinkDirectory() {
 
 	// Create a directory.
 	err := os.Mkdir(dirName, 0700)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Attempt to hard-link it to a new name.
 	err = os.Link(dirName, path.Join(t.dir, "other"))
 
-	AssertNe(nil, err)
-	ExpectThat(err, Error(HasSubstr("link")))
-	ExpectThat(err, Error(HasSubstr("not permitted")))
+	ogletest.AssertNe(nil, err)
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("link")))
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("not permitted")))
 }
 
 func (t *PosixTest) RmdirWhileOpenedForReading() {
@@ -382,36 +382,36 @@ func (t *PosixTest) RmdirWhileOpenedForReading() {
 
 	// Create a directory.
 	err = os.Mkdir(path.Join(t.dir, "dir"), 0700)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Open the directory for reading.
 	f, err := os.Open(path.Join(t.dir, "dir"))
 	defer func() {
 		if f != nil {
-			ExpectEq(nil, f.Close())
+			ogletest.ExpectEq(nil, f.Close())
 		}
 	}()
 
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Remove the directory.
 	err = os.Remove(path.Join(t.dir, "dir"))
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Create a new directory, with the same name even, and add some contents
 	// within it.
 	err = os.MkdirAll(path.Join(t.dir, "dir/foo"), 0700)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	err = os.MkdirAll(path.Join(t.dir, "dir/bar"), 0700)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	err = os.MkdirAll(path.Join(t.dir, "dir/baz"), 0700)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// We should still be able to stat the open file handle.
 	fi, err := f.Stat()
-	ExpectEq("dir", fi.Name())
+	ogletest.ExpectEq("dir", fi.Name())
 
 	// Attempt to read from the directory. This shouldn't see any junk from the
 	// new directory. It should either succeed with an empty result or should
@@ -419,9 +419,9 @@ func (t *PosixTest) RmdirWhileOpenedForReading() {
 	names, err := f.Readdirnames(0)
 
 	if err != nil {
-		ExpectThat(err, Error(HasSubstr("no such file")))
+		ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("no such file")))
 	} else {
-		ExpectThat(names, ElementsAre())
+		ogletest.ExpectThat(names, oglematchers.ElementsAre())
 	}
 }
 

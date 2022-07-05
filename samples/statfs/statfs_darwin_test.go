@@ -21,7 +21,7 @@ import (
 	"syscall"
 
 	"github.com/jacobsa/fuse/fuseops"
-	. "github.com/jacobsa/ogletest"
+	"github.com/jacobsa/ogletest"
 )
 
 // Sample output:
@@ -60,18 +60,18 @@ func (t *StatFSTest) Syscall_ZeroValues() {
 	// zero value for each field. The assertions below act as documentation for
 	// the OS's behavior in this case.
 	err = syscall.Statfs(t.Dir, &stat)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
-	ExpectEq(4096, stat.Bsize)
-	ExpectEq(65536, stat.Iosize)
-	ExpectEq(0, stat.Blocks)
-	ExpectEq(0, stat.Bfree)
-	ExpectEq(0, stat.Bavail)
-	ExpectEq(0, stat.Files)
-	ExpectEq(0, stat.Ffree)
-	ExpectEq("osxfuse", convertName(stat.Fstypename[:]))
-	ExpectEq(t.canonicalDir, convertName(stat.Mntonname[:]))
-	ExpectEq(fsName, convertName(stat.Mntfromname[:]))
+	ogletest.ExpectEq(4096, stat.Bsize)
+	ogletest.ExpectEq(65536, stat.Iosize)
+	ogletest.ExpectEq(0, stat.Blocks)
+	ogletest.ExpectEq(0, stat.Bfree)
+	ogletest.ExpectEq(0, stat.Bavail)
+	ogletest.ExpectEq(0, stat.Files)
+	ogletest.ExpectEq(0, stat.Ffree)
+	ogletest.ExpectEq("osxfuse", convertName(stat.Fstypename[:]))
+	ogletest.ExpectEq(t.canonicalDir, convertName(stat.Mntonname[:]))
+	ogletest.ExpectEq(fsName, convertName(stat.Mntfromname[:]))
 }
 
 func (t *StatFSTest) Syscall_NonZeroValues() {
@@ -95,18 +95,18 @@ func (t *StatFSTest) Syscall_NonZeroValues() {
 
 	// Stat.
 	err = syscall.Statfs(t.Dir, &stat)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
-	ExpectEq(canned.BlockSize, stat.Bsize)
-	ExpectEq(canned.IoSize, stat.Iosize)
-	ExpectEq(canned.Blocks, stat.Blocks)
-	ExpectEq(canned.BlocksFree, stat.Bfree)
-	ExpectEq(canned.BlocksAvailable, stat.Bavail)
-	ExpectEq(canned.Inodes, stat.Files)
-	ExpectEq(canned.InodesFree, stat.Ffree)
-	ExpectEq("osxfuse", convertName(stat.Fstypename[:]))
-	ExpectEq(t.canonicalDir, convertName(stat.Mntonname[:]))
-	ExpectEq(fsName, convertName(stat.Mntfromname[:]))
+	ogletest.ExpectEq(canned.BlockSize, stat.Bsize)
+	ogletest.ExpectEq(canned.IoSize, stat.Iosize)
+	ogletest.ExpectEq(canned.Blocks, stat.Blocks)
+	ogletest.ExpectEq(canned.BlocksFree, stat.Bfree)
+	ogletest.ExpectEq(canned.BlocksAvailable, stat.Bavail)
+	ogletest.ExpectEq(canned.Inodes, stat.Files)
+	ogletest.ExpectEq(canned.InodesFree, stat.Ffree)
+	ogletest.ExpectEq("osxfuse", convertName(stat.Fstypename[:]))
+	ogletest.ExpectEq(t.canonicalDir, convertName(stat.Mntonname[:]))
+	ogletest.ExpectEq(fsName, convertName(stat.Mntfromname[:]))
 }
 
 func (t *StatFSTest) BlockSizes() {
@@ -160,9 +160,9 @@ func (t *StatFSTest) BlockSizes() {
 		// Check.
 		var stat syscall.Statfs_t
 		err = syscall.Statfs(t.Dir, &stat)
-		AssertEq(nil, err)
+		ogletest.AssertEq(nil, err)
 
-		ExpectEq(tc.expectedBsize, stat.Bsize, "%s", desc)
+		ogletest.ExpectEq(tc.expectedBsize, stat.Bsize, "%s", desc)
 	}
 }
 
@@ -214,8 +214,8 @@ func (t *StatFSTest) IoSizes() {
 		// Check.
 		var stat syscall.Statfs_t
 		err = syscall.Statfs(t.Dir, &stat)
-		AssertEq(nil, err)
+		ogletest.AssertEq(nil, err)
 
-		ExpectEq(tc.expectedIosize, stat.Iosize, "%s", desc)
+		ogletest.ExpectEq(tc.expectedIosize, stat.Iosize, "%s", desc)
 	}
 }

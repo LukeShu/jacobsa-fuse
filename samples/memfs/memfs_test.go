@@ -33,12 +33,12 @@ import (
 	"github.com/jacobsa/fuse/fusetesting"
 	"github.com/jacobsa/fuse/samples"
 	"github.com/jacobsa/fuse/samples/memfs"
-	. "github.com/jacobsa/oglematchers"
-	. "github.com/jacobsa/ogletest"
+	"github.com/jacobsa/oglematchers"
+	"github.com/jacobsa/ogletest"
 	"golang.org/x/sys/unix"
 )
 
-func TestMemFS(t *testing.T) { RunTests(t) }
+func TestMemFS(t *testing.T) { ogletest.RunTests(t) }
 
 // The radius we use for "expect mtime is within"-style assertions. We can't
 // share a synchronized clock with the ultimate source of mtimes because with
@@ -96,7 +96,7 @@ type memFSTest struct {
 	samples.SampleTest
 }
 
-func (t *memFSTest) SetUp(ti *TestInfo) {
+func (t *memFSTest) SetUp(ti *ogletest.TestInfo) {
 	// Disable writeback caching so that pid is always available in OpContext
 	t.MountConfig.DisableWritebackCaching = true
 
@@ -112,13 +112,13 @@ type MemFSTest struct {
 	memFSTest
 }
 
-func init() { RegisterTestSuite(&MemFSTest{}) }
+func init() { ogletest.RegisterTestSuite(&MemFSTest{}) }
 
 func (t *MemFSTest) ContentsOfEmptyFileSystem() {
 	entries, err := fusetesting.ReadDirPicky(t.Dir)
 
-	AssertEq(nil, err)
-	ExpectThat(entries, ElementsAre())
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectThat(entries, oglematchers.ElementsAre())
 }
 
 func (t *MemFSTest) Mkdir_OneLevel() {
@@ -132,47 +132,47 @@ func (t *MemFSTest) Mkdir_OneLevel() {
 	// Create a directory within the root.
 	createTime := time.Now()
 	err = os.Mkdir(dirName, 0754)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Stat the directory.
 	fi, err = os.Stat(dirName)
 	stat = fi.Sys().(*syscall.Stat_t)
 
-	AssertEq(nil, err)
-	ExpectEq("dir", fi.Name())
-	ExpectEq(0, fi.Size())
-	ExpectEq(os.ModeDir|applyUmask(0754), fi.Mode())
-	ExpectThat(fi, fusetesting.MtimeIsWithin(createTime, timeSlop))
-	ExpectThat(fi, fusetesting.BirthtimeIsWithin(createTime, timeSlop))
-	ExpectTrue(fi.IsDir())
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq("dir", fi.Name())
+	ogletest.ExpectEq(0, fi.Size())
+	ogletest.ExpectEq(os.ModeDir|applyUmask(0754), fi.Mode())
+	ogletest.ExpectThat(fi, fusetesting.MtimeIsWithin(createTime, timeSlop))
+	ogletest.ExpectThat(fi, fusetesting.BirthtimeIsWithin(createTime, timeSlop))
+	ogletest.ExpectTrue(fi.IsDir())
 
-	ExpectNe(0, stat.Ino)
-	ExpectEq(1, stat.Nlink)
-	ExpectEq(currentUid(), stat.Uid)
-	ExpectEq(currentGid(), stat.Gid)
-	ExpectEq(0, stat.Size)
+	ogletest.ExpectNe(0, stat.Ino)
+	ogletest.ExpectEq(1, stat.Nlink)
+	ogletest.ExpectEq(currentUid(), stat.Uid)
+	ogletest.ExpectEq(currentGid(), stat.Gid)
+	ogletest.ExpectEq(0, stat.Size)
 
 	// Check the root's mtime.
 	fi, err = os.Stat(t.Dir)
 
-	AssertEq(nil, err)
-	ExpectThat(fi, fusetesting.MtimeIsWithin(createTime, timeSlop))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectThat(fi, fusetesting.MtimeIsWithin(createTime, timeSlop))
 
 	// Read the directory.
 	entries, err = fusetesting.ReadDirPicky(dirName)
 
-	AssertEq(nil, err)
-	ExpectThat(entries, ElementsAre())
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectThat(entries, oglematchers.ElementsAre())
 
 	// Read the root.
 	entries, err = fusetesting.ReadDirPicky(t.Dir)
 
-	AssertEq(nil, err)
-	AssertEq(1, len(entries))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(1, len(entries))
 
 	fi = entries[0]
-	ExpectEq("dir", fi.Name())
-	ExpectEq(os.ModeDir|applyUmask(0754), fi.Mode())
+	ogletest.ExpectEq("dir", fi.Name())
+	ogletest.ExpectEq(os.ModeDir|applyUmask(0754), fi.Mode())
 }
 
 func (t *MemFSTest) Mkdir_TwoLevels() {
@@ -183,51 +183,51 @@ func (t *MemFSTest) Mkdir_TwoLevels() {
 
 	// Create a directory within the root.
 	err = os.Mkdir(path.Join(t.Dir, "parent"), 0700)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Create a child of that directory.
 	createTime := time.Now()
 	err = os.Mkdir(path.Join(t.Dir, "parent/dir"), 0754)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Stat the directory.
 	fi, err = os.Stat(path.Join(t.Dir, "parent/dir"))
 	stat = fi.Sys().(*syscall.Stat_t)
 
-	AssertEq(nil, err)
-	ExpectEq("dir", fi.Name())
-	ExpectEq(0, fi.Size())
-	ExpectEq(os.ModeDir|applyUmask(0754), fi.Mode())
-	ExpectThat(fi, fusetesting.MtimeIsWithin(createTime, timeSlop))
-	ExpectThat(fi, fusetesting.BirthtimeIsWithin(createTime, timeSlop))
-	ExpectTrue(fi.IsDir())
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq("dir", fi.Name())
+	ogletest.ExpectEq(0, fi.Size())
+	ogletest.ExpectEq(os.ModeDir|applyUmask(0754), fi.Mode())
+	ogletest.ExpectThat(fi, fusetesting.MtimeIsWithin(createTime, timeSlop))
+	ogletest.ExpectThat(fi, fusetesting.BirthtimeIsWithin(createTime, timeSlop))
+	ogletest.ExpectTrue(fi.IsDir())
 
-	ExpectNe(0, stat.Ino)
-	ExpectEq(1, stat.Nlink)
-	ExpectEq(currentUid(), stat.Uid)
-	ExpectEq(currentGid(), stat.Gid)
-	ExpectEq(0, stat.Size)
+	ogletest.ExpectNe(0, stat.Ino)
+	ogletest.ExpectEq(1, stat.Nlink)
+	ogletest.ExpectEq(currentUid(), stat.Uid)
+	ogletest.ExpectEq(currentGid(), stat.Gid)
+	ogletest.ExpectEq(0, stat.Size)
 
 	// Check the parent's mtime.
 	fi, err = os.Stat(path.Join(t.Dir, "parent"))
-	AssertEq(nil, err)
-	ExpectThat(fi, fusetesting.MtimeIsWithin(createTime, timeSlop))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectThat(fi, fusetesting.MtimeIsWithin(createTime, timeSlop))
 
 	// Read the directory.
 	entries, err = fusetesting.ReadDirPicky(path.Join(t.Dir, "parent/dir"))
 
-	AssertEq(nil, err)
-	ExpectThat(entries, ElementsAre())
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectThat(entries, oglematchers.ElementsAre())
 
 	// Read the parent.
 	entries, err = fusetesting.ReadDirPicky(path.Join(t.Dir, "parent"))
 
-	AssertEq(nil, err)
-	AssertEq(1, len(entries))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(1, len(entries))
 
 	fi = entries[0]
-	ExpectEq("dir", fi.Name())
-	ExpectEq(os.ModeDir|applyUmask(0754), fi.Mode())
+	ogletest.ExpectEq("dir", fi.Name())
+	ogletest.ExpectEq(os.ModeDir|applyUmask(0754), fi.Mode())
 }
 
 func (t *MemFSTest) Mkdir_AlreadyExists() {
@@ -236,13 +236,13 @@ func (t *MemFSTest) Mkdir_AlreadyExists() {
 
 	// Create the directory once.
 	err = os.Mkdir(dirName, 0754)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Attempt to create it again.
 	err = os.Mkdir(dirName, 0754)
 
-	AssertNe(nil, err)
-	ExpectThat(err, Error(HasSubstr("exists")))
+	ogletest.AssertNe(nil, err)
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("exists")))
 }
 
 func (t *MemFSTest) Mkdir_IntermediateIsFile() {
@@ -251,14 +251,14 @@ func (t *MemFSTest) Mkdir_IntermediateIsFile() {
 	// Create a file.
 	fileName := path.Join(t.Dir, "foo")
 	err = ioutil.WriteFile(fileName, []byte{}, 0700)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Attempt to create a directory within the file.
 	dirName := path.Join(fileName, "dir")
 	err = os.Mkdir(dirName, 0754)
 
-	AssertNe(nil, err)
-	ExpectThat(err, Error(HasSubstr("not a directory")))
+	ogletest.AssertNe(nil, err)
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("not a directory")))
 }
 
 func (t *MemFSTest) Mkdir_IntermediateIsNonExistent() {
@@ -268,8 +268,8 @@ func (t *MemFSTest) Mkdir_IntermediateIsNonExistent() {
 	dirName := path.Join(t.Dir, "foo/dir")
 	err = os.Mkdir(dirName, 0754)
 
-	AssertNe(nil, err)
-	ExpectThat(err, Error(HasSubstr("no such file or directory")))
+	ogletest.AssertNe(nil, err)
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("no such file or directory")))
 }
 
 func (t *MemFSTest) Mkdir_PermissionDenied() {
@@ -277,13 +277,13 @@ func (t *MemFSTest) Mkdir_PermissionDenied() {
 
 	// Create a directory within the root without write permissions.
 	err = os.Mkdir(path.Join(t.Dir, "parent"), 0500)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Attempt to create a child of that directory.
 	err = os.Mkdir(path.Join(t.Dir, "parent/dir"), 0754)
 
-	AssertNe(nil, err)
-	ExpectThat(err, Error(HasSubstr("permission denied")))
+	ogletest.AssertNe(nil, err)
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("permission denied")))
 }
 
 func (t *MemFSTest) CreateNewFile_InRoot() {
@@ -297,30 +297,30 @@ func (t *MemFSTest) CreateNewFile_InRoot() {
 
 	createTime := time.Now()
 	err = ioutil.WriteFile(fileName, []byte(contents), 0400)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Stat it.
 	fi, err = os.Stat(fileName)
 	stat = fi.Sys().(*syscall.Stat_t)
 
-	AssertEq(nil, err)
-	ExpectEq("foo", fi.Name())
-	ExpectEq(len(contents), fi.Size())
-	ExpectEq(applyUmask(0400), fi.Mode())
-	ExpectThat(fi, fusetesting.MtimeIsWithin(createTime, timeSlop))
-	ExpectThat(fi, fusetesting.BirthtimeIsWithin(createTime, timeSlop))
-	ExpectFalse(fi.IsDir())
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq("foo", fi.Name())
+	ogletest.ExpectEq(len(contents), fi.Size())
+	ogletest.ExpectEq(applyUmask(0400), fi.Mode())
+	ogletest.ExpectThat(fi, fusetesting.MtimeIsWithin(createTime, timeSlop))
+	ogletest.ExpectThat(fi, fusetesting.BirthtimeIsWithin(createTime, timeSlop))
+	ogletest.ExpectFalse(fi.IsDir())
 
-	ExpectNe(0, stat.Ino)
-	ExpectEq(1, stat.Nlink)
-	ExpectEq(currentUid(), stat.Uid)
-	ExpectEq(currentGid(), stat.Gid)
-	ExpectEq(len(contents), stat.Size)
+	ogletest.ExpectNe(0, stat.Ino)
+	ogletest.ExpectEq(1, stat.Nlink)
+	ogletest.ExpectEq(currentUid(), stat.Uid)
+	ogletest.ExpectEq(currentGid(), stat.Gid)
+	ogletest.ExpectEq(len(contents), stat.Size)
 
 	// Read it back.
 	slice, err := ioutil.ReadFile(fileName)
-	AssertEq(nil, err)
-	ExpectEq(contents, string(slice))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq(contents, string(slice))
 }
 
 func (t *MemFSTest) CreateNewFile_InSubDir() {
@@ -331,7 +331,7 @@ func (t *MemFSTest) CreateNewFile_InSubDir() {
 	// Create a sub-dir.
 	dirName := path.Join(t.Dir, "dir")
 	err = os.Mkdir(dirName, 0700)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Write a file.
 	fileName := path.Join(dirName, "foo")
@@ -339,30 +339,30 @@ func (t *MemFSTest) CreateNewFile_InSubDir() {
 
 	createTime := time.Now()
 	err = ioutil.WriteFile(fileName, []byte(contents), 0400)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Stat it.
 	fi, err = os.Stat(fileName)
 	stat = fi.Sys().(*syscall.Stat_t)
 
-	AssertEq(nil, err)
-	ExpectEq("foo", fi.Name())
-	ExpectEq(len(contents), fi.Size())
-	ExpectEq(applyUmask(0400), fi.Mode())
-	ExpectThat(fi, fusetesting.MtimeIsWithin(createTime, timeSlop))
-	ExpectThat(fi, fusetesting.BirthtimeIsWithin(createTime, timeSlop))
-	ExpectFalse(fi.IsDir())
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq("foo", fi.Name())
+	ogletest.ExpectEq(len(contents), fi.Size())
+	ogletest.ExpectEq(applyUmask(0400), fi.Mode())
+	ogletest.ExpectThat(fi, fusetesting.MtimeIsWithin(createTime, timeSlop))
+	ogletest.ExpectThat(fi, fusetesting.BirthtimeIsWithin(createTime, timeSlop))
+	ogletest.ExpectFalse(fi.IsDir())
 
-	ExpectNe(0, stat.Ino)
-	ExpectEq(1, stat.Nlink)
-	ExpectEq(currentUid(), stat.Uid)
-	ExpectEq(currentGid(), stat.Gid)
-	ExpectEq(len(contents), stat.Size)
+	ogletest.ExpectNe(0, stat.Ino)
+	ogletest.ExpectEq(1, stat.Nlink)
+	ogletest.ExpectEq(currentUid(), stat.Uid)
+	ogletest.ExpectEq(currentGid(), stat.Gid)
+	ogletest.ExpectEq(len(contents), stat.Size)
 
 	// Read it back.
 	slice, err := ioutil.ReadFile(fileName)
-	AssertEq(nil, err)
-	ExpectEq(contents, string(slice))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq(contents, string(slice))
 }
 
 func (t *MemFSTest) ModifyExistingFile_InRoot() {
@@ -376,40 +376,40 @@ func (t *MemFSTest) ModifyExistingFile_InRoot() {
 
 	createTime := time.Now()
 	err = ioutil.WriteFile(fileName, []byte("Hello, world!"), 0600)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Open the file and modify it.
 	f, err := os.OpenFile(fileName, os.O_WRONLY, 0400)
 	t.ToClose = append(t.ToClose, f)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	modifyTime := time.Now()
 	n, err = f.WriteAt([]byte("H"), 0)
-	AssertEq(nil, err)
-	AssertEq(1, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(1, n)
 
 	// Stat the file.
 	fi, err = os.Stat(fileName)
 	stat = fi.Sys().(*syscall.Stat_t)
 
-	AssertEq(nil, err)
-	ExpectEq("foo", fi.Name())
-	ExpectEq(len("Hello, world!"), fi.Size())
-	ExpectEq(applyUmask(0600), fi.Mode())
-	ExpectThat(fi, fusetesting.MtimeIsWithin(modifyTime, timeSlop))
-	ExpectThat(fi, fusetesting.BirthtimeIsWithin(createTime, timeSlop))
-	ExpectFalse(fi.IsDir())
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq("foo", fi.Name())
+	ogletest.ExpectEq(len("Hello, world!"), fi.Size())
+	ogletest.ExpectEq(applyUmask(0600), fi.Mode())
+	ogletest.ExpectThat(fi, fusetesting.MtimeIsWithin(modifyTime, timeSlop))
+	ogletest.ExpectThat(fi, fusetesting.BirthtimeIsWithin(createTime, timeSlop))
+	ogletest.ExpectFalse(fi.IsDir())
 
-	ExpectNe(0, stat.Ino)
-	ExpectEq(1, stat.Nlink)
-	ExpectEq(currentUid(), stat.Uid)
-	ExpectEq(currentGid(), stat.Gid)
-	ExpectEq(len("Hello, world!"), stat.Size)
+	ogletest.ExpectNe(0, stat.Ino)
+	ogletest.ExpectEq(1, stat.Nlink)
+	ogletest.ExpectEq(currentUid(), stat.Uid)
+	ogletest.ExpectEq(currentGid(), stat.Gid)
+	ogletest.ExpectEq(len("Hello, world!"), stat.Size)
 
 	// Read the file back.
 	slice, err := ioutil.ReadFile(fileName)
-	AssertEq(nil, err)
-	ExpectEq("Hello, world!", string(slice))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq("Hello, world!", string(slice))
 }
 
 func (t *MemFSTest) ModifyExistingFile_InSubDir() {
@@ -421,47 +421,47 @@ func (t *MemFSTest) ModifyExistingFile_InSubDir() {
 	// Create a sub-directory.
 	dirName := path.Join(t.Dir, "dir")
 	err = os.Mkdir(dirName, 0700)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Write a file.
 	fileName := path.Join(dirName, "foo")
 
 	createTime := time.Now()
 	err = ioutil.WriteFile(fileName, []byte("Hello, world!"), 0600)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Open the file and modify it.
 	f, err := os.OpenFile(fileName, os.O_WRONLY, 0400)
 	t.ToClose = append(t.ToClose, f)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	modifyTime := time.Now()
 	n, err = f.WriteAt([]byte("H"), 0)
-	AssertEq(nil, err)
-	AssertEq(1, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(1, n)
 
 	// Stat the file.
 	fi, err = os.Stat(fileName)
 	stat = fi.Sys().(*syscall.Stat_t)
 
-	AssertEq(nil, err)
-	ExpectEq("foo", fi.Name())
-	ExpectEq(len("Hello, world!"), fi.Size())
-	ExpectEq(applyUmask(0600), fi.Mode())
-	ExpectThat(fi, fusetesting.MtimeIsWithin(modifyTime, timeSlop))
-	ExpectThat(fi, fusetesting.BirthtimeIsWithin(createTime, timeSlop))
-	ExpectFalse(fi.IsDir())
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq("foo", fi.Name())
+	ogletest.ExpectEq(len("Hello, world!"), fi.Size())
+	ogletest.ExpectEq(applyUmask(0600), fi.Mode())
+	ogletest.ExpectThat(fi, fusetesting.MtimeIsWithin(modifyTime, timeSlop))
+	ogletest.ExpectThat(fi, fusetesting.BirthtimeIsWithin(createTime, timeSlop))
+	ogletest.ExpectFalse(fi.IsDir())
 
-	ExpectNe(0, stat.Ino)
-	ExpectEq(1, stat.Nlink)
-	ExpectEq(currentUid(), stat.Uid)
-	ExpectEq(currentGid(), stat.Gid)
-	ExpectEq(len("Hello, world!"), stat.Size)
+	ogletest.ExpectNe(0, stat.Ino)
+	ogletest.ExpectEq(1, stat.Nlink)
+	ogletest.ExpectEq(currentUid(), stat.Uid)
+	ogletest.ExpectEq(currentGid(), stat.Gid)
+	ogletest.ExpectEq(len("Hello, world!"), stat.Size)
 
 	// Read the file back.
 	slice, err := ioutil.ReadFile(fileName)
-	AssertEq(nil, err)
-	ExpectEq("Hello, world!", string(slice))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq("Hello, world!", string(slice))
 }
 
 func (t *MemFSTest) UnlinkFile_Exists() {
@@ -470,29 +470,29 @@ func (t *MemFSTest) UnlinkFile_Exists() {
 	// Write a file.
 	fileName := path.Join(t.Dir, "foo")
 	err = ioutil.WriteFile(fileName, []byte("Hello, world!"), 0600)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Unlink it.
 	err = os.Remove(fileName)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Statting it should fail.
 	_, err = os.Stat(fileName)
 
-	AssertNe(nil, err)
-	ExpectThat(err, Error(HasSubstr("no such file")))
+	ogletest.AssertNe(nil, err)
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("no such file")))
 
 	// Nothing should be in the directory.
 	entries, err := fusetesting.ReadDirPicky(t.Dir)
-	AssertEq(nil, err)
-	ExpectThat(entries, ElementsAre())
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectThat(entries, oglematchers.ElementsAre())
 }
 
 func (t *MemFSTest) UnlinkFile_NonExistent() {
 	err := os.Remove(path.Join(t.Dir, "foo"))
 
-	AssertNe(nil, err)
-	ExpectThat(err, Error(HasSubstr("no such file")))
+	ogletest.AssertNe(nil, err)
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("no such file")))
 }
 
 func (t *MemFSTest) UnlinkFile_StillOpen() {
@@ -501,42 +501,42 @@ func (t *MemFSTest) UnlinkFile_StillOpen() {
 	// Create and open a file.
 	f, err := os.OpenFile(fileName, os.O_RDWR|os.O_CREATE, 0600)
 	t.ToClose = append(t.ToClose, f)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Write some data into it.
 	n, err := f.Write([]byte("taco"))
-	AssertEq(nil, err)
-	AssertEq(4, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(4, n)
 
 	// Unlink it.
 	err = os.Remove(fileName)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// The directory should no longer contain it.
 	entries, err := fusetesting.ReadDirPicky(t.Dir)
-	AssertEq(nil, err)
-	ExpectThat(entries, ElementsAre())
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectThat(entries, oglematchers.ElementsAre())
 
 	// We should be able to stat the file. It should still show as having
 	// contents, but with no links.
 	fi, err := f.Stat()
 
-	AssertEq(nil, err)
-	ExpectEq(4, fi.Size())
-	ExpectEq(0, fi.Sys().(*syscall.Stat_t).Nlink)
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq(4, fi.Size())
+	ogletest.ExpectEq(0, fi.Sys().(*syscall.Stat_t).Nlink)
 
 	// The contents should still be available.
 	buf := make([]byte, 1024)
 	n, err = f.ReadAt(buf, 0)
 
-	AssertEq(io.EOF, err)
-	AssertEq(4, n)
-	ExpectEq("taco", string(buf[:4]))
+	ogletest.AssertEq(io.EOF, err)
+	ogletest.AssertEq(4, n)
+	ogletest.ExpectEq("taco", string(buf[:4]))
 
 	// Writing should still work, too.
 	n, err = f.Write([]byte("burrito"))
-	AssertEq(nil, err)
-	AssertEq(len("burrito"), n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(len("burrito"), n)
 }
 
 func (t *MemFSTest) Rmdir_NonEmpty() {
@@ -544,13 +544,13 @@ func (t *MemFSTest) Rmdir_NonEmpty() {
 
 	// Create two levels of directories.
 	err = os.MkdirAll(path.Join(t.Dir, "foo/bar"), 0754)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Attempt to remove the parent.
 	err = os.Remove(path.Join(t.Dir, "foo"))
 
-	AssertNe(nil, err)
-	ExpectThat(err, Error(HasSubstr("not empty")))
+	ogletest.AssertNe(nil, err)
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("not empty")))
 }
 
 func (t *MemFSTest) Rmdir_Empty() {
@@ -559,40 +559,40 @@ func (t *MemFSTest) Rmdir_Empty() {
 
 	// Create two levels of directories.
 	err = os.MkdirAll(path.Join(t.Dir, "foo/bar"), 0754)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Remove the leaf.
 	rmTime := time.Now()
 	err = os.Remove(path.Join(t.Dir, "foo/bar"))
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// There should be nothing left in the parent.
 	entries, err = fusetesting.ReadDirPicky(path.Join(t.Dir, "foo"))
 
-	AssertEq(nil, err)
-	ExpectThat(entries, ElementsAre())
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectThat(entries, oglematchers.ElementsAre())
 
 	// Check the parent's mtime.
 	fi, err := os.Stat(path.Join(t.Dir, "foo"))
-	AssertEq(nil, err)
-	ExpectThat(fi, fusetesting.MtimeIsWithin(rmTime, timeSlop))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectThat(fi, fusetesting.MtimeIsWithin(rmTime, timeSlop))
 
 	// Remove the parent.
 	err = os.Remove(path.Join(t.Dir, "foo"))
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Now the root directory should be empty, too.
 	entries, err = fusetesting.ReadDirPicky(t.Dir)
 
-	AssertEq(nil, err)
-	ExpectThat(entries, ElementsAre())
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectThat(entries, oglematchers.ElementsAre())
 }
 
 func (t *MemFSTest) Rmdir_NonExistent() {
 	err := os.Remove(path.Join(t.Dir, "blah"))
 
-	AssertNe(nil, err)
-	ExpectThat(err, Error(HasSubstr("no such file or directory")))
+	ogletest.AssertNe(nil, err)
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("no such file or directory")))
 }
 
 func (t *MemFSTest) Rmdir_OpenedForReading() {
@@ -601,40 +601,40 @@ func (t *MemFSTest) Rmdir_OpenedForReading() {
 	// Create a directory.
 	createTime := time.Now()
 	err = os.Mkdir(path.Join(t.Dir, "dir"), 0700)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Open the directory for reading.
 	f, err := os.Open(path.Join(t.Dir, "dir"))
 	defer func() {
 		if f != nil {
-			ExpectEq(nil, f.Close())
+			ogletest.ExpectEq(nil, f.Close())
 		}
 	}()
 
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Remove the directory.
 	err = os.Remove(path.Join(t.Dir, "dir"))
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Create a new directory, with the same name even, and add some contents
 	// within it.
 	err = os.MkdirAll(path.Join(t.Dir, "dir/foo"), 0700)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	err = os.MkdirAll(path.Join(t.Dir, "dir/bar"), 0700)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	err = os.MkdirAll(path.Join(t.Dir, "dir/baz"), 0700)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// We should still be able to stat the open file handle. It should show up as
 	// unlinked.
 	fi, err := f.Stat()
 
-	ExpectEq("dir", fi.Name())
-	ExpectThat(fi, fusetesting.MtimeIsWithin(createTime, timeSlop))
-	ExpectEq(0, fi.Sys().(*syscall.Stat_t).Nlink)
+	ogletest.ExpectEq("dir", fi.Name())
+	ogletest.ExpectThat(fi, fusetesting.MtimeIsWithin(createTime, timeSlop))
+	ogletest.ExpectEq(0, fi.Sys().(*syscall.Stat_t).Nlink)
 
 	// Attempt to read from the directory. This shouldn't see any junk from the
 	// new directory. It should either succeed with an empty result or should
@@ -642,9 +642,9 @@ func (t *MemFSTest) Rmdir_OpenedForReading() {
 	names, err := f.Readdirnames(0)
 
 	if err != nil {
-		ExpectThat(err, Error(HasSubstr("no such file")))
+		ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("no such file")))
 	} else {
-		ExpectThat(names, ElementsAre())
+		ogletest.ExpectThat(names, oglematchers.ElementsAre())
 	}
 }
 
@@ -653,11 +653,11 @@ func (t *MemFSTest) CaseSensitive() {
 
 	// Create a file.
 	err = ioutil.WriteFile(path.Join(t.Dir, "file"), []byte{}, 0400)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Create a directory.
 	err = os.Mkdir(path.Join(t.Dir, "dir"), 0400)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Attempt to stat with the wrong case.
 	names := []string{
@@ -671,8 +671,8 @@ func (t *MemFSTest) CaseSensitive() {
 
 	for _, name := range names {
 		_, err = os.Stat(path.Join(t.Dir, name))
-		AssertNe(nil, err, "Name: %s", name)
-		AssertThat(err, Error(HasSubstr("no such file or directory")))
+		ogletest.AssertNe(nil, err, "Name: %s", name)
+		ogletest.AssertThat(err, oglematchers.Error(oglematchers.HasSubstr("no such file or directory")))
 	}
 }
 
@@ -683,21 +683,21 @@ func (t *MemFSTest) WriteOverlapsEndOfFile() {
 	// Create a file.
 	f, err := os.Create(path.Join(t.Dir, "foo"))
 	t.ToClose = append(t.ToClose, f)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Make it 4 bytes long.
 	err = f.Truncate(4)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Write the range [2, 6).
 	n, err = f.WriteAt([]byte("taco"), 2)
-	AssertEq(nil, err)
-	AssertEq(4, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(4, n)
 
 	// Read the full contents of the file.
 	contents, err := ioutil.ReadAll(f)
-	AssertEq(nil, err)
-	ExpectEq("\x00\x00taco", string(contents))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq("\x00\x00taco", string(contents))
 }
 
 func (t *MemFSTest) WriteStartsAtEndOfFile() {
@@ -707,21 +707,21 @@ func (t *MemFSTest) WriteStartsAtEndOfFile() {
 	// Create a file.
 	f, err := os.Create(path.Join(t.Dir, "foo"))
 	t.ToClose = append(t.ToClose, f)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Make it 2 bytes long.
 	err = f.Truncate(2)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Write the range [2, 6).
 	n, err = f.WriteAt([]byte("taco"), 2)
-	AssertEq(nil, err)
-	AssertEq(4, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(4, n)
 
 	// Read the full contents of the file.
 	contents, err := ioutil.ReadAll(f)
-	AssertEq(nil, err)
-	ExpectEq("\x00\x00taco", string(contents))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq("\x00\x00taco", string(contents))
 }
 
 func (t *MemFSTest) WriteStartsPastEndOfFile() {
@@ -731,17 +731,17 @@ func (t *MemFSTest) WriteStartsPastEndOfFile() {
 	// Create a file.
 	f, err := os.Create(path.Join(t.Dir, "foo"))
 	t.ToClose = append(t.ToClose, f)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Write the range [2, 6).
 	n, err = f.WriteAt([]byte("taco"), 2)
-	AssertEq(nil, err)
-	AssertEq(4, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(4, n)
 
 	// Read the full contents of the file.
 	contents, err := ioutil.ReadAll(f)
-	AssertEq(nil, err)
-	ExpectEq("\x00\x00taco", string(contents))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq("\x00\x00taco", string(contents))
 }
 
 func (t *MemFSTest) WriteAtDoesntChangeOffset_NotAppendMode() {
@@ -751,25 +751,25 @@ func (t *MemFSTest) WriteAtDoesntChangeOffset_NotAppendMode() {
 	// Create a file.
 	f, err := os.Create(path.Join(t.Dir, "foo"))
 	t.ToClose = append(t.ToClose, f)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Make it 16 bytes long.
 	err = f.Truncate(16)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Seek to offset 4.
 	_, err = f.Seek(4, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Write the range [10, 14).
 	n, err = f.WriteAt([]byte("taco"), 2)
-	AssertEq(nil, err)
-	AssertEq(4, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(4, n)
 
 	// We should still be at offset 4.
 	offset, err := getFileOffset(f)
-	AssertEq(nil, err)
-	ExpectEq(4, offset)
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq(4, offset)
 }
 
 func (t *MemFSTest) WriteAtDoesntChangeOffset_AppendMode() {
@@ -783,25 +783,25 @@ func (t *MemFSTest) WriteAtDoesntChangeOffset_AppendMode() {
 		0600)
 
 	t.ToClose = append(t.ToClose, f)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Make it 16 bytes long.
 	err = f.Truncate(16)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Seek to offset 4.
 	_, err = f.Seek(4, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Write the range [10, 14).
 	n, err = f.WriteAt([]byte("taco"), 2)
-	AssertEq(nil, err)
-	AssertEq(4, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(4, n)
 
 	// We should still be at offset 4.
 	offset, err := getFileOffset(f)
-	AssertEq(nil, err)
-	ExpectEq(4, offset)
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq(4, offset)
 }
 
 func (t *MemFSTest) LargeFile() {
@@ -810,19 +810,19 @@ func (t *MemFSTest) LargeFile() {
 	// Create a file.
 	f, err := os.Create(path.Join(t.Dir, "foo"))
 	t.ToClose = append(t.ToClose, f)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Copy in large contents.
 	const size = 1 << 24
 	contents := bytes.Repeat([]byte{0x20}, size)
 
 	_, err = io.Copy(f, bytes.NewReader(contents))
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Read the full contents of the file.
 	contents, err = ioutil.ReadFile(f.Name())
-	AssertEq(nil, err)
-	ExpectEq(size, len(contents))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq(size, len(contents))
 }
 
 func (t *MemFSTest) AppendMode() {
@@ -834,26 +834,26 @@ func (t *MemFSTest) AppendMode() {
 	// Create a file with some contents.
 	fileName := path.Join(t.Dir, "foo")
 	err = ioutil.WriteFile(fileName, []byte("Jello, "), 0600)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Open the file in append mode.
 	f, err := os.OpenFile(fileName, os.O_RDWR|os.O_APPEND, 0600)
 	t.ToClose = append(t.ToClose, f)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Seek to somewhere silly and then write.
 	off, err = f.Seek(2, 0)
-	AssertEq(nil, err)
-	AssertEq(2, off)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(2, off)
 
 	n, err = f.Write([]byte("world!"))
-	AssertEq(nil, err)
-	AssertEq(6, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(6, n)
 
 	// The offset should have been updated to point at the end of the file.
 	off, err = getFileOffset(f)
-	AssertEq(nil, err)
-	ExpectEq(13, off)
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq(13, off)
 
 	// Read back the contents of the file, which should be correct even though we
 	// seeked to a silly place before writing the world part.
@@ -867,8 +867,8 @@ func (t *MemFSTest) AppendMode() {
 	//
 	// So we allow either the POSIX result or the Linux result.
 	n, err = f.ReadAt(buf, 0)
-	AssertEq(io.EOF, err)
-	ExpectThat(string(buf[:n]), AnyOf("Jello, world!", "Jello, world!H"))
+	ogletest.AssertEq(io.EOF, err)
+	ogletest.ExpectThat(string(buf[:n]), oglematchers.AnyOf("Jello, world!", "Jello, world!H"))
 }
 
 func (t *MemFSTest) ReadsPastEndOfFile() {
@@ -879,30 +879,30 @@ func (t *MemFSTest) ReadsPastEndOfFile() {
 	// Create a file.
 	f, err := os.Create(path.Join(t.Dir, "foo"))
 	t.ToClose = append(t.ToClose, f)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Give it some contents.
 	n, err = f.Write([]byte("taco"))
-	AssertEq(nil, err)
-	AssertEq(4, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(4, n)
 
 	// Read a range overlapping EOF.
 	n, err = f.ReadAt(buf[:4], 2)
-	AssertEq(io.EOF, err)
-	ExpectEq(2, n)
-	ExpectEq("co", string(buf[:n]))
+	ogletest.AssertEq(io.EOF, err)
+	ogletest.ExpectEq(2, n)
+	ogletest.ExpectEq("co", string(buf[:n]))
 
 	// Read a range starting at EOF.
 	n, err = f.ReadAt(buf[:4], 4)
-	AssertEq(io.EOF, err)
-	ExpectEq(0, n)
-	ExpectEq("", string(buf[:n]))
+	ogletest.AssertEq(io.EOF, err)
+	ogletest.ExpectEq(0, n)
+	ogletest.ExpectEq("", string(buf[:n]))
 
 	// Read a range starting past EOF.
 	n, err = f.ReadAt(buf[:4], 100)
-	AssertEq(io.EOF, err)
-	ExpectEq(0, n)
-	ExpectEq("", string(buf[:n]))
+	ogletest.AssertEq(io.EOF, err)
+	ogletest.ExpectEq(0, n)
+	ogletest.ExpectEq("", string(buf[:n]))
 }
 
 func (t *MemFSTest) Truncate_Smaller() {
@@ -911,26 +911,26 @@ func (t *MemFSTest) Truncate_Smaller() {
 
 	// Create a file.
 	err = ioutil.WriteFile(fileName, []byte("taco"), 0600)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Open it for modification.
 	f, err := os.OpenFile(fileName, os.O_RDWR, 0)
 	t.ToClose = append(t.ToClose, f)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Truncate it.
 	err = f.Truncate(2)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Stat it.
 	fi, err := f.Stat()
-	AssertEq(nil, err)
-	ExpectEq(2, fi.Size())
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq(2, fi.Size())
 
 	// Read the contents.
 	contents, err := ioutil.ReadFile(fileName)
-	AssertEq(nil, err)
-	ExpectEq("ta", string(contents))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq("ta", string(contents))
 }
 
 func (t *MemFSTest) Truncate_SameSize() {
@@ -939,26 +939,26 @@ func (t *MemFSTest) Truncate_SameSize() {
 
 	// Create a file.
 	err = ioutil.WriteFile(fileName, []byte("taco"), 0600)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Open it for modification.
 	f, err := os.OpenFile(fileName, os.O_RDWR, 0)
 	t.ToClose = append(t.ToClose, f)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Truncate it.
 	err = f.Truncate(4)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Stat it.
 	fi, err := f.Stat()
-	AssertEq(nil, err)
-	ExpectEq(4, fi.Size())
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq(4, fi.Size())
 
 	// Read the contents.
 	contents, err := ioutil.ReadFile(fileName)
-	AssertEq(nil, err)
-	ExpectEq("taco", string(contents))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq("taco", string(contents))
 }
 
 func (t *MemFSTest) Truncate_Larger() {
@@ -967,26 +967,26 @@ func (t *MemFSTest) Truncate_Larger() {
 
 	// Create a file.
 	err = ioutil.WriteFile(fileName, []byte("taco"), 0600)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Open it for modification.
 	f, err := os.OpenFile(fileName, os.O_RDWR, 0)
 	t.ToClose = append(t.ToClose, f)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Truncate it.
 	err = f.Truncate(6)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Stat it.
 	fi, err := f.Stat()
-	AssertEq(nil, err)
-	ExpectEq(6, fi.Size())
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq(6, fi.Size())
 
 	// Read the contents.
 	contents, err := ioutil.ReadFile(fileName)
-	AssertEq(nil, err)
-	ExpectEq("taco\x00\x00", string(contents))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq("taco\x00\x00", string(contents))
 }
 
 func (t *MemFSTest) Chmod() {
@@ -995,16 +995,16 @@ func (t *MemFSTest) Chmod() {
 
 	// Create a file.
 	err = ioutil.WriteFile(fileName, []byte(""), 0600)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Chmod it.
 	err = os.Chmod(fileName, 0754)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Stat it.
 	fi, err := os.Stat(fileName)
-	AssertEq(nil, err)
-	ExpectEq(0754, fi.Mode())
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq(0754, fi.Mode())
 }
 
 func (t *MemFSTest) Chtimes() {
@@ -1013,33 +1013,33 @@ func (t *MemFSTest) Chtimes() {
 
 	// Create a file.
 	err = ioutil.WriteFile(fileName, []byte(""), 0600)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Chtimes it.
 	expectedMtime := time.Now().Add(123 * time.Second).Round(time.Second)
 	err = os.Chtimes(fileName, time.Now(), expectedMtime)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Stat it.
 	fi, err := os.Stat(fileName)
-	AssertEq(nil, err)
-	ExpectThat(fi, fusetesting.MtimeIsWithin(expectedMtime, timeSlop))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectThat(fi, fusetesting.MtimeIsWithin(expectedMtime, timeSlop))
 }
 
 func (t *MemFSTest) ReadDirWhileModifying() {
 	dirName := path.Join(t.Dir, "dir")
 	createFile := func(name string) {
-		AssertEq(nil, ioutil.WriteFile(path.Join(dirName, name), []byte{}, 0400))
+		ogletest.AssertEq(nil, ioutil.WriteFile(path.Join(dirName, name), []byte{}, 0400))
 	}
 
 	// Create a directory.
 	err := os.Mkdir(dirName, 0700)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Open the directory.
 	d, err := os.Open(dirName)
 	t.ToClose = append(t.ToClose, d)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Add four files.
 	createFile("foo")
@@ -1049,12 +1049,12 @@ func (t *MemFSTest) ReadDirWhileModifying() {
 
 	// Read one entry from the directory.
 	names, err := d.Readdirnames(1)
-	AssertEq(nil, err)
-	AssertThat(names, ElementsAre("foo"))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertThat(names, oglematchers.ElementsAre("foo"))
 
 	// Make two holes in the directory.
-	AssertEq(nil, os.Remove(path.Join(dirName, "foo")))
-	AssertEq(nil, os.Remove(path.Join(dirName, "baz")))
+	ogletest.AssertEq(nil, os.Remove(path.Join(dirName, "foo")))
+	ogletest.AssertEq(nil, os.Remove(path.Join(dirName, "baz")))
 
 	// Add a bunch of files to the directory.
 	createFile("blah_0")
@@ -1075,13 +1075,13 @@ func (t *MemFSTest) ReadDirWhileModifying() {
 			break
 		}
 
-		AssertEq(nil, err)
+		ogletest.AssertEq(nil, err)
 	}
 
 	// Posix requires that we should have seen bar and qux, which we didn't
 	// delete.
-	ExpectTrue(namesSeen["bar"])
-	ExpectTrue(namesSeen["qux"])
+	ogletest.ExpectTrue(namesSeen["bar"])
+	ogletest.ExpectTrue(namesSeen["qux"])
 }
 
 func (t *MemFSTest) CreateSymlink() {
@@ -1093,28 +1093,28 @@ func (t *MemFSTest) CreateSymlink() {
 
 	// Create the link.
 	err = os.Symlink(target, symlinkName)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Stat the link.
 	fi, err = os.Lstat(symlinkName)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
-	ExpectEq("foo", fi.Name())
-	ExpectEq(0444|os.ModeSymlink, fi.Mode())
+	ogletest.ExpectEq("foo", fi.Name())
+	ogletest.ExpectEq(0444|os.ModeSymlink, fi.Mode())
 
 	// Read the link.
 	actual, err := os.Readlink(symlinkName)
-	AssertEq(nil, err)
-	ExpectEq(target, actual)
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq(target, actual)
 
 	// Read the parent directory.
 	entries, err := fusetesting.ReadDirPicky(t.Dir)
-	AssertEq(nil, err)
-	AssertEq(1, len(entries))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(1, len(entries))
 
 	fi = entries[0]
-	ExpectEq("foo", fi.Name())
-	ExpectEq(0444|os.ModeSymlink, fi.Mode())
+	ogletest.ExpectEq("foo", fi.Name())
+	ogletest.ExpectEq(0444|os.ModeSymlink, fi.Mode())
 }
 
 func (t *MemFSTest) CreateSymlink_AlreadyExists() {
@@ -1123,16 +1123,16 @@ func (t *MemFSTest) CreateSymlink_AlreadyExists() {
 	// Create a file and a directory.
 	fileName := path.Join(t.Dir, "foo")
 	err = ioutil.WriteFile(fileName, []byte{}, 0400)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	dirName := path.Join(t.Dir, "bar")
 	err = os.Mkdir(dirName, 0700)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Create an existing symlink.
 	symlinkName := path.Join(t.Dir, "baz")
 	err = os.Symlink("blah", symlinkName)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Symlinking on top of any of them should fail.
 	names := []string{
@@ -1143,13 +1143,13 @@ func (t *MemFSTest) CreateSymlink_AlreadyExists() {
 
 	for _, n := range names {
 		err = os.Symlink("blah", n)
-		ExpectThat(err, Error(HasSubstr("exists")))
+		ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("exists")))
 	}
 }
 
 func (t *MemFSTest) ReadLink_NonExistent() {
 	_, err := os.Readlink(path.Join(t.Dir, "foo"))
-	ExpectTrue(os.IsNotExist(err), "err: %v", err)
+	ogletest.ExpectTrue(os.IsNotExist(err), "err: %v", err)
 }
 
 func (t *MemFSTest) ReadLink_NotASymlink() {
@@ -1158,11 +1158,11 @@ func (t *MemFSTest) ReadLink_NotASymlink() {
 	// Create a file and a directory.
 	fileName := path.Join(t.Dir, "foo")
 	err = ioutil.WriteFile(fileName, []byte{}, 0400)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	dirName := path.Join(t.Dir, "bar")
 	err = os.Mkdir(dirName, 0700)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Reading either of them as a symlink should fail.
 	names := []string{
@@ -1172,7 +1172,7 @@ func (t *MemFSTest) ReadLink_NotASymlink() {
 
 	for _, n := range names {
 		_, err = os.Readlink(n)
-		ExpectThat(err, Error(HasSubstr("invalid argument")))
+		ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("invalid argument")))
 	}
 }
 
@@ -1184,21 +1184,21 @@ func (t *MemFSTest) DeleteSymlink() {
 
 	// Create the link.
 	err = os.Symlink(target, symlinkName)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Remove it.
 	err = os.Remove(symlinkName)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Statting should now fail.
 	_, err = os.Lstat(symlinkName)
-	ExpectTrue(os.IsNotExist(err), "err: %v", err)
+	ogletest.ExpectTrue(os.IsNotExist(err), "err: %v", err)
 
 	// Read the parent directory.
 	entries, err := fusetesting.ReadDirPicky(t.Dir)
 
-	AssertEq(nil, err)
-	ExpectThat(entries, ElementsAre())
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectThat(entries, oglematchers.ElementsAre())
 }
 
 func (t *MemFSTest) CreateHardlink() {
@@ -1210,44 +1210,44 @@ func (t *MemFSTest) CreateHardlink() {
 	const contents = "Hello\x00world"
 
 	err = ioutil.WriteFile(fileName, []byte(contents), 0444)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Clean up the file at the end.
 	defer func() {
 		err := os.Remove(fileName)
-		AssertEq(nil, err)
+		ogletest.AssertEq(nil, err)
 	}()
 
 	// Create a link to the file.
 	linkName := path.Join(t.Dir, "foo")
 	err = os.Link(fileName, linkName)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Clean up the file at the end.
 	defer func() {
 		err := os.Remove(linkName)
-		AssertEq(nil, err)
+		ogletest.AssertEq(nil, err)
 	}()
 
 	// Stat the link.
 	fi, err = os.Lstat(linkName)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
-	ExpectEq("foo", fi.Name())
-	ExpectEq(0444, fi.Mode())
+	ogletest.ExpectEq("foo", fi.Name())
+	ogletest.ExpectEq(0444, fi.Mode())
 
 	// Read the parent directory.
 	entries, err := fusetesting.ReadDirPicky(t.Dir)
-	AssertEq(nil, err)
-	AssertEq(2, len(entries))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(2, len(entries))
 
 	fi = entries[0]
-	ExpectEq("foo", fi.Name())
-	ExpectEq(0444, fi.Mode())
+	ogletest.ExpectEq("foo", fi.Name())
+	ogletest.ExpectEq(0444, fi.Mode())
 
 	fi = entries[1]
-	ExpectEq("regular_file", fi.Name())
-	ExpectEq(0444, fi.Mode())
+	ogletest.ExpectEq("regular_file", fi.Name())
+	ogletest.ExpectEq(0444, fi.Mode())
 }
 
 func (t *MemFSTest) CreateHardlink_AlreadyExists() {
@@ -1256,21 +1256,21 @@ func (t *MemFSTest) CreateHardlink_AlreadyExists() {
 	// Create a file and a directory.
 	fileName := path.Join(t.Dir, "foo")
 	err = ioutil.WriteFile(fileName, []byte{}, 0400)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	dirName := path.Join(t.Dir, "bar")
 	err = os.Mkdir(dirName, 0700)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Create an existing symlink.
 	symlinkName := path.Join(t.Dir, "baz")
 	err = os.Symlink("blah", symlinkName)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Create another link to the file.
 	hardlinkName := path.Join(t.Dir, "qux")
 	err = os.Link(fileName, hardlinkName)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Symlinking on top of any of them should fail.
 	names := []string{
@@ -1282,7 +1282,7 @@ func (t *MemFSTest) CreateHardlink_AlreadyExists() {
 
 	for _, n := range names {
 		err = os.Link(fileName, n)
-		ExpectThat(err, Error(HasSubstr("exists")))
+		ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("exists")))
 	}
 }
 
@@ -1295,7 +1295,7 @@ func (t *MemFSTest) DeleteHardlink() {
 	const contents = "Hello\x00world"
 
 	err = ioutil.WriteFile(fileName, []byte(contents), 0444)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Step #1: We will create and remove a link and verify that
 	// after removal everything is as expected.
@@ -1303,25 +1303,25 @@ func (t *MemFSTest) DeleteHardlink() {
 	// Create a link to the file.
 	linkName := path.Join(t.Dir, "foo")
 	err = os.Link(fileName, linkName)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Remove the link.
 	err = os.Remove(linkName)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Stat the link.
 	fi, err = os.Lstat(linkName)
-	AssertEq(nil, fi)
-	ExpectThat(err, Error(HasSubstr("no such file")))
+	ogletest.AssertEq(nil, fi)
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("no such file")))
 
 	// Read the parent directory.
 	entries, err := fusetesting.ReadDirPicky(t.Dir)
-	AssertEq(nil, err)
-	AssertEq(1, len(entries))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(1, len(entries))
 
 	fi = entries[0]
-	ExpectEq("regular_file", fi.Name())
-	ExpectEq(0444, fi.Mode())
+	ogletest.ExpectEq("regular_file", fi.Name())
+	ogletest.ExpectEq(0444, fi.Mode())
 
 	// Step #2: We will create a link and remove the original file subsequently
 	// and verify that after removal everything is as expected.
@@ -1329,35 +1329,35 @@ func (t *MemFSTest) DeleteHardlink() {
 	// Create a link to the file.
 	linkName = path.Join(t.Dir, "bar")
 	err = os.Link(fileName, linkName)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Remove the original file.
 	err = os.Remove(fileName)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Stat the link.
 	fi, err = os.Lstat(linkName)
-	AssertEq(nil, err)
-	ExpectEq("bar", fi.Name())
-	ExpectEq(0444, fi.Mode())
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq("bar", fi.Name())
+	ogletest.ExpectEq(0444, fi.Mode())
 
 	// Stat the original file.
 	fi, err = os.Lstat(fileName)
-	AssertEq(nil, fi)
-	ExpectThat(err, Error(HasSubstr("no such file")))
+	ogletest.AssertEq(nil, fi)
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("no such file")))
 
 	// Read the parent directory.
 	entries, err = fusetesting.ReadDirPicky(t.Dir)
-	AssertEq(nil, err)
-	AssertEq(1, len(entries))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(1, len(entries))
 
 	fi = entries[0]
-	ExpectEq("bar", fi.Name())
-	ExpectEq(0444, fi.Mode())
+	ogletest.ExpectEq("bar", fi.Name())
+	ogletest.ExpectEq(0444, fi.Mode())
 
 	// Cleanup.
 	err = os.Remove(linkName)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 }
 
 func (t *MemFSTest) ReadHardlink() {
@@ -1368,33 +1368,33 @@ func (t *MemFSTest) ReadHardlink() {
 	const contents = "Hello\x00world"
 
 	err = ioutil.WriteFile(fileName, []byte(contents), 0444)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Clean up the file at the end.
 	defer func() {
 		err := os.Remove(fileName)
-		AssertEq(nil, err)
+		ogletest.AssertEq(nil, err)
 	}()
 
 	// Create a link to the file.
 	linkName := path.Join(t.Dir, "foo")
 	err = os.Link(fileName, linkName)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Clean up the file at the end.
 	defer func() {
 		err := os.Remove(linkName)
-		AssertEq(nil, err)
+		ogletest.AssertEq(nil, err)
 	}()
 
 	// Read files.
 	original, err := ioutil.ReadFile(fileName)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 	linked, err := ioutil.ReadFile(linkName)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Check if the bytes are the same.
-	AssertEq(true, reflect.DeepEqual(original, linked))
+	ogletest.AssertEq(true, reflect.DeepEqual(original, linked))
 }
 
 func (t *MemFSTest) CreateInParallel_NoTruncate() {
@@ -1428,45 +1428,45 @@ func (t *MemFSTest) RenameWithinDir_File() {
 	parentPath := path.Join(t.Dir, "parent")
 
 	err = os.Mkdir(parentPath, 0700)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// And a file within it.
 	oldPath := path.Join(parentPath, "foo")
 
 	err = ioutil.WriteFile(oldPath, []byte("taco"), 0400)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Rename it.
 	newPath := path.Join(parentPath, "bar")
 
 	err = os.Rename(oldPath, newPath)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// The old name shouldn't work.
 	_, err = os.Stat(oldPath)
-	ExpectTrue(os.IsNotExist(err), "err: %v", err)
+	ogletest.ExpectTrue(os.IsNotExist(err), "err: %v", err)
 
 	_, err = ioutil.ReadFile(oldPath)
-	ExpectTrue(os.IsNotExist(err), "err: %v", err)
+	ogletest.ExpectTrue(os.IsNotExist(err), "err: %v", err)
 
 	// The new name should.
 	fi, err := os.Stat(newPath)
-	AssertEq(nil, err)
-	ExpectEq(len("taco"), fi.Size())
-	ExpectEq(os.FileMode(0400), fi.Mode())
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq(len("taco"), fi.Size())
+	ogletest.ExpectEq(os.FileMode(0400), fi.Mode())
 
 	contents, err := ioutil.ReadFile(newPath)
-	AssertEq(nil, err)
-	ExpectEq("taco", string(contents))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq("taco", string(contents))
 
 	// There should only be the new entry in the directory.
 	entries, err := fusetesting.ReadDirPicky(parentPath)
-	AssertEq(nil, err)
-	AssertEq(1, len(entries))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(1, len(entries))
 	fi = entries[0]
 
-	ExpectEq(path.Base(newPath), fi.Name())
-	ExpectEq(os.FileMode(0400), fi.Mode())
+	ogletest.ExpectEq(path.Base(newPath), fi.Name())
+	ogletest.ExpectEq(os.FileMode(0400), fi.Mode())
 }
 
 func (t *MemFSTest) RenameWithinDir_Directory() {
@@ -1476,46 +1476,46 @@ func (t *MemFSTest) RenameWithinDir_Directory() {
 	parentPath := path.Join(t.Dir, "parent")
 
 	err = os.Mkdir(parentPath, 0700)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// And a non-empty directory within it.
 	oldPath := path.Join(parentPath, "foo")
 
 	err = os.MkdirAll(path.Join(oldPath, "child"), 0700)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Rename it.
 	newPath := path.Join(parentPath, "bar")
 
 	err = os.Rename(oldPath, newPath)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// The old name shouldn't work.
 	_, err = os.Stat(oldPath)
-	ExpectTrue(os.IsNotExist(err), "err: %v", err)
+	ogletest.ExpectTrue(os.IsNotExist(err), "err: %v", err)
 
 	// The new name should.
 	fi, err := os.Stat(newPath)
-	AssertEq(nil, err)
-	ExpectEq(os.FileMode(0700)|os.ModeDir, fi.Mode())
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq(os.FileMode(0700)|os.ModeDir, fi.Mode())
 
 	// There should only be the new entry in the parent.
 	entries, err := fusetesting.ReadDirPicky(parentPath)
-	AssertEq(nil, err)
-	AssertEq(1, len(entries))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(1, len(entries))
 	fi = entries[0]
 
-	ExpectEq(path.Base(newPath), fi.Name())
-	ExpectEq(os.FileMode(0700)|os.ModeDir, fi.Mode())
+	ogletest.ExpectEq(path.Base(newPath), fi.Name())
+	ogletest.ExpectEq(os.FileMode(0700)|os.ModeDir, fi.Mode())
 
 	// And the child should still be present.
 	entries, err = fusetesting.ReadDirPicky(newPath)
-	AssertEq(nil, err)
-	AssertEq(1, len(entries))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(1, len(entries))
 	fi = entries[0]
 
-	ExpectEq("child", fi.Name())
-	ExpectEq(os.FileMode(0700)|os.ModeDir, fi.Mode())
+	ogletest.ExpectEq("child", fi.Name())
+	ogletest.ExpectEq(os.FileMode(0700)|os.ModeDir, fi.Mode())
 }
 
 func (t *MemFSTest) RenameWithinDir_SameName() {
@@ -1525,31 +1525,31 @@ func (t *MemFSTest) RenameWithinDir_SameName() {
 	parentPath := path.Join(t.Dir, "parent")
 
 	err = os.Mkdir(parentPath, 0700)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// And a file within it.
 	filePath := path.Join(parentPath, "foo")
 
 	err = ioutil.WriteFile(filePath, []byte("taco"), 0400)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Attempt to rename it.
 	err = os.Rename(filePath, filePath)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// The file should still exist.
 	contents, err := ioutil.ReadFile(filePath)
-	AssertEq(nil, err)
-	ExpectEq("taco", string(contents))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq("taco", string(contents))
 
 	// There should only be the one entry in the directory.
 	entries, err := fusetesting.ReadDirPicky(parentPath)
-	AssertEq(nil, err)
-	AssertEq(1, len(entries))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(1, len(entries))
 	fi := entries[0]
 
-	ExpectEq(path.Base(filePath), fi.Name())
-	ExpectEq(os.FileMode(0400), fi.Mode())
+	ogletest.ExpectEq(path.Base(filePath), fi.Name())
+	ogletest.ExpectEq(os.FileMode(0400), fi.Mode())
 }
 
 func (t *MemFSTest) RenameAcrossDirs_File() {
@@ -1560,53 +1560,53 @@ func (t *MemFSTest) RenameAcrossDirs_File() {
 	newParentPath := path.Join(t.Dir, "new")
 
 	err = os.Mkdir(oldParentPath, 0700)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	err = os.Mkdir(newParentPath, 0700)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// And a file within the first.
 	oldPath := path.Join(oldParentPath, "foo")
 
 	err = ioutil.WriteFile(oldPath, []byte("taco"), 0400)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Rename it.
 	newPath := path.Join(newParentPath, "bar")
 
 	err = os.Rename(oldPath, newPath)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// The old name shouldn't work.
 	_, err = os.Stat(oldPath)
-	ExpectTrue(os.IsNotExist(err), "err: %v", err)
+	ogletest.ExpectTrue(os.IsNotExist(err), "err: %v", err)
 
 	_, err = ioutil.ReadFile(oldPath)
-	ExpectTrue(os.IsNotExist(err), "err: %v", err)
+	ogletest.ExpectTrue(os.IsNotExist(err), "err: %v", err)
 
 	// The new name should.
 	fi, err := os.Stat(newPath)
-	AssertEq(nil, err)
-	ExpectEq(len("taco"), fi.Size())
-	ExpectEq(os.FileMode(0400), fi.Mode())
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq(len("taco"), fi.Size())
+	ogletest.ExpectEq(os.FileMode(0400), fi.Mode())
 
 	contents, err := ioutil.ReadFile(newPath)
-	AssertEq(nil, err)
-	ExpectEq("taco", string(contents))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq("taco", string(contents))
 
 	// Check the old parent.
 	entries, err := fusetesting.ReadDirPicky(oldParentPath)
-	AssertEq(nil, err)
-	AssertEq(0, len(entries))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(0, len(entries))
 
 	// And the new one.
 	entries, err = fusetesting.ReadDirPicky(newParentPath)
-	AssertEq(nil, err)
-	AssertEq(1, len(entries))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(1, len(entries))
 	fi = entries[0]
 
-	ExpectEq(path.Base(newPath), fi.Name())
-	ExpectEq(os.FileMode(0400), fi.Mode())
+	ogletest.ExpectEq(path.Base(newPath), fi.Name())
+	ogletest.ExpectEq(os.FileMode(0400), fi.Mode())
 }
 
 func (t *MemFSTest) RenameAcrossDirs_Directory() {
@@ -1617,54 +1617,54 @@ func (t *MemFSTest) RenameAcrossDirs_Directory() {
 	newParentPath := path.Join(t.Dir, "new")
 
 	err = os.Mkdir(oldParentPath, 0700)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	err = os.Mkdir(newParentPath, 0700)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// And a non-empty directory within the first.
 	oldPath := path.Join(oldParentPath, "foo")
 
 	err = os.MkdirAll(path.Join(oldPath, "child"), 0700)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Rename it.
 	newPath := path.Join(newParentPath, "bar")
 
 	err = os.Rename(oldPath, newPath)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// The old name shouldn't work.
 	_, err = os.Stat(oldPath)
-	ExpectTrue(os.IsNotExist(err), "err: %v", err)
+	ogletest.ExpectTrue(os.IsNotExist(err), "err: %v", err)
 
 	// The new name should.
 	fi, err := os.Stat(newPath)
-	AssertEq(nil, err)
-	ExpectEq(os.FileMode(0700)|os.ModeDir, fi.Mode())
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq(os.FileMode(0700)|os.ModeDir, fi.Mode())
 
 	// And the child should still be present.
 	entries, err := fusetesting.ReadDirPicky(newPath)
-	AssertEq(nil, err)
-	AssertEq(1, len(entries))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(1, len(entries))
 	fi = entries[0]
 
-	ExpectEq("child", fi.Name())
-	ExpectEq(os.FileMode(0700)|os.ModeDir, fi.Mode())
+	ogletest.ExpectEq("child", fi.Name())
+	ogletest.ExpectEq(os.FileMode(0700)|os.ModeDir, fi.Mode())
 
 	// Check the old parent.
 	entries, err = fusetesting.ReadDirPicky(oldParentPath)
-	AssertEq(nil, err)
-	AssertEq(0, len(entries))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(0, len(entries))
 
 	// And the new one.
 	entries, err = fusetesting.ReadDirPicky(newParentPath)
-	AssertEq(nil, err)
-	AssertEq(1, len(entries))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(1, len(entries))
 	fi = entries[0]
 
-	ExpectEq(path.Base(newPath), fi.Name())
-	ExpectEq(os.FileMode(0700)|os.ModeDir, fi.Mode())
+	ogletest.ExpectEq(path.Base(newPath), fi.Name())
+	ogletest.ExpectEq(os.FileMode(0700)|os.ModeDir, fi.Mode())
 }
 
 func (t *MemFSTest) RenameOutOfFileSystem() {
@@ -1674,15 +1674,15 @@ func (t *MemFSTest) RenameOutOfFileSystem() {
 	oldPath := path.Join(t.Dir, "foo")
 
 	err = ioutil.WriteFile(oldPath, []byte("taco"), 0400)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Attempt to move it out of the file system.
 	tempDir, err := ioutil.TempDir("", "memfs_test")
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 	defer os.RemoveAll(tempDir)
 
 	err = os.Rename(oldPath, path.Join(tempDir, "bar"))
-	ExpectThat(err, Error(HasSubstr("cross-device")))
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("cross-device")))
 }
 
 func (t *MemFSTest) RenameIntoFileSystem() {
@@ -1690,7 +1690,7 @@ func (t *MemFSTest) RenameIntoFileSystem() {
 
 	// Create a file outside of our file system.
 	f, err := ioutil.TempFile("", "memfs_test")
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 	defer f.Close()
 
 	oldPath := f.Name()
@@ -1698,7 +1698,7 @@ func (t *MemFSTest) RenameIntoFileSystem() {
 
 	// Attempt to move it into the file system.
 	err = os.Rename(oldPath, path.Join(t.Dir, "bar"))
-	ExpectThat(err, Error(HasSubstr("cross-device")))
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("cross-device")))
 }
 
 func (t *MemFSTest) RenameOverExistingFile() {
@@ -1707,30 +1707,30 @@ func (t *MemFSTest) RenameOverExistingFile() {
 	// Create two files.
 	oldPath := path.Join(t.Dir, "foo")
 	err = ioutil.WriteFile(oldPath, []byte("taco"), 0400)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	newPath := path.Join(t.Dir, "bar")
 	err = ioutil.WriteFile(newPath, []byte("burrito"), 0600)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Rename one over the other.
 	err = os.Rename(oldPath, newPath)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Check the file contents.
 	contents, err := ioutil.ReadFile(newPath)
-	AssertEq(nil, err)
-	ExpectEq("taco", string(contents))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq("taco", string(contents))
 
 	// And the parent listing.
 	entries, err := fusetesting.ReadDirPicky(t.Dir)
-	AssertEq(nil, err)
-	AssertEq(1, len(entries))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(1, len(entries))
 	fi := entries[0]
 
-	ExpectEq(path.Base(newPath), fi.Name())
-	ExpectEq(os.FileMode(0400), fi.Mode())
-	ExpectEq(len("taco"), fi.Size())
+	ogletest.ExpectEq(path.Base(newPath), fi.Name())
+	ogletest.ExpectEq(os.FileMode(0400), fi.Mode())
+	ogletest.ExpectEq(len("taco"), fi.Size())
 }
 
 func (t *MemFSTest) RenameOverExistingDirectory() {
@@ -1739,23 +1739,23 @@ func (t *MemFSTest) RenameOverExistingDirectory() {
 	// Create two directories, the first non-empty.
 	oldPath := path.Join(t.Dir, "foo")
 	err = os.MkdirAll(path.Join(oldPath, "child"), 0700)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	newPath := path.Join(t.Dir, "bar")
 	err = os.Mkdir(newPath, 0600)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Renaming over the non-empty directory shouldn't work.
 	err = os.Rename(newPath, oldPath)
-	ExpectThat(err, Error(MatchesRegexp("not empty|file exists")))
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.MatchesRegexp("not empty|file exists")))
 
 	err = os.Rename(oldPath, newPath)
-	ExpectThat(err, Error(HasSubstr("file exists")))
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("file exists")))
 
 	// Both should still be present in the parent listing.
 	entries, err := fusetesting.ReadDirPicky(t.Dir)
-	AssertEq(nil, err)
-	ExpectEq(2, len(entries))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq(2, len(entries))
 }
 
 func (t *MemFSTest) RenameOverExisting_WrongType() {
@@ -1764,25 +1764,25 @@ func (t *MemFSTest) RenameOverExisting_WrongType() {
 	// Create a file and a directory.
 	filePath := path.Join(t.Dir, "foo")
 	err = ioutil.WriteFile(filePath, []byte("taco"), 0400)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	dirPath := path.Join(t.Dir, "bar")
 	err = os.Mkdir(dirPath, 0700)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Renaming either over the other shouldn't work.
 	err = os.Rename(filePath, dirPath)
-	ExpectThat(err, Error(MatchesRegexp("is a directory|file exists")))
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.MatchesRegexp("is a directory|file exists")))
 
 	err = os.Rename(dirPath, filePath)
-	ExpectThat(err, Error(HasSubstr("not a directory")))
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("not a directory")))
 }
 
 func (t *MemFSTest) RenameNonExistentFile() {
 	var err error
 
 	err = os.Rename(path.Join(t.Dir, "foo"), path.Join(t.Dir, "bar"))
-	ExpectThat(err, Error(HasSubstr("no such file")))
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("no such file")))
 }
 
 func (t *MemFSTest) NoXattrs() {
@@ -1793,25 +1793,25 @@ func (t *MemFSTest) NoXattrs() {
 	// Create a file.
 	filePath := path.Join(t.Dir, "foo")
 	err = ioutil.WriteFile(filePath, []byte("taco"), 0400)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// List xattr names.
 	sz, err = unix.Listxattr(filePath, nil)
-	AssertEq(nil, err)
-	AssertEq(0, sz)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(0, sz)
 
 	// Attempt to read a non-existent xattr.
 	_, err = unix.Getxattr(filePath, "foo", nil)
-	ExpectEq(fuse.ENOATTR, err)
+	ogletest.ExpectEq(fuse.ENOATTR, err)
 
 	// Attempt to read a non-existent xattr with a buf.
 	_, err = unix.Getxattr(filePath, "foo", smallBuf[:])
-	ExpectEq(fuse.ENOATTR, err)
+	ogletest.ExpectEq(fuse.ENOATTR, err)
 
 	// List xattr names with a buf.
 	sz, err = unix.Listxattr(filePath, smallBuf[:])
-	AssertEq(nil, err)
-	ExpectEq(0, sz)
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq(0, sz)
 }
 
 func (t *MemFSTest) SetXAttr() {
@@ -1822,43 +1822,43 @@ func (t *MemFSTest) SetXAttr() {
 	// Create a file.
 	filePath := path.Join(t.Dir, "foo")
 	err = ioutil.WriteFile(filePath, []byte("taco"), 0600)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	err = unix.Setxattr(filePath, "foo", []byte("bar"), unix.XATTR_REPLACE)
-	AssertEq(fuse.ENOATTR, err)
+	ogletest.AssertEq(fuse.ENOATTR, err)
 
 	err = unix.Setxattr(filePath, "foo", []byte("bar"), unix.XATTR_CREATE)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// List xattr with a buf that is too small.
 	_, err = unix.Listxattr(filePath, buf[:1])
-	ExpectEq(unix.ERANGE, err)
+	ogletest.ExpectEq(unix.ERANGE, err)
 
 	// List xattr to ask for name size.
 	sz, err = unix.Listxattr(filePath, nil)
-	AssertEq(nil, err)
-	AssertEq(4, sz)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(4, sz)
 
 	// List xattr names.
 	sz, err = unix.Listxattr(filePath, buf[:sz])
-	AssertEq(nil, err)
-	AssertEq(4, sz)
-	AssertEq("foo\000", string(buf[:sz]))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(4, sz)
+	ogletest.AssertEq("foo\000", string(buf[:sz]))
 
 	// Read xattr with a buf that is too small.
 	_, err = unix.Getxattr(filePath, "foo", buf[:1])
-	ExpectEq(unix.ERANGE, err)
+	ogletest.ExpectEq(unix.ERANGE, err)
 
 	// Read xattr to ask for value size.
 	sz, err = unix.Getxattr(filePath, "foo", nil)
-	AssertEq(nil, err)
-	AssertEq(3, sz)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(3, sz)
 
 	// Read xattr value.
 	sz, err = unix.Getxattr(filePath, "foo", buf[:sz])
-	AssertEq(nil, err)
-	AssertEq(3, sz)
-	AssertEq("bar", string(buf[:sz]))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(3, sz)
+	ogletest.AssertEq("bar", string(buf[:sz]))
 }
 
 func (t *MemFSTest) RemoveXAttr() {
@@ -1867,19 +1867,19 @@ func (t *MemFSTest) RemoveXAttr() {
 	// Create a file
 	filePath := path.Join(t.Dir, "foo")
 	err = ioutil.WriteFile(filePath, []byte("taco"), 0600)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	err = unix.Removexattr(filePath, "foo")
-	AssertEq(fuse.ENOATTR, err)
+	ogletest.AssertEq(fuse.ENOATTR, err)
 
 	err = unix.Setxattr(filePath, "foo", []byte("bar"), unix.XATTR_CREATE)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	err = unix.Removexattr(filePath, "foo")
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	_, err = unix.Getxattr(filePath, "foo", nil)
-	AssertEq(fuse.ENOATTR, err)
+	ogletest.AssertEq(fuse.ENOATTR, err)
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1890,7 +1890,7 @@ type MknodTest struct {
 	memFSTest
 }
 
-func init() { RegisterTestSuite(&MknodTest{}) }
+func init() { ogletest.RegisterTestSuite(&MknodTest{}) }
 
 func (t *MknodTest) File() {
 	// mknod(2) only works for root on OS X.
@@ -1903,20 +1903,20 @@ func (t *MknodTest) File() {
 
 	// Create
 	err = syscall.Mknod(p, syscall.S_IFREG|0641, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Stat
 	fi, err := os.Stat(p)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
-	ExpectEq(path.Base(p), fi.Name())
-	ExpectEq(0, fi.Size())
-	ExpectEq(os.FileMode(0641), fi.Mode())
+	ogletest.ExpectEq(path.Base(p), fi.Name())
+	ogletest.ExpectEq(0, fi.Size())
+	ogletest.ExpectEq(os.FileMode(0641), fi.Mode())
 
 	// Read
 	contents, err := ioutil.ReadFile(p)
-	AssertEq(nil, err)
-	ExpectEq("", string(contents))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq("", string(contents))
 }
 
 func (t *MknodTest) Directory() {
@@ -1931,7 +1931,7 @@ func (t *MknodTest) Directory() {
 	// Quoth `man 2 mknod`: "Under Linux, this call cannot be used to create
 	// directories."
 	err = syscall.Mknod(p, syscall.S_IFDIR|0700, 0)
-	ExpectEq(syscall.EPERM, err)
+	ogletest.ExpectEq(syscall.EPERM, err)
 }
 
 func (t *MknodTest) AlreadyExists() {
@@ -1945,16 +1945,16 @@ func (t *MknodTest) AlreadyExists() {
 
 	// Create (first)
 	err = ioutil.WriteFile(p, []byte("taco"), 0600)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Create (second)
 	err = syscall.Mknod(p, syscall.S_IFREG|0600, 0)
-	ExpectEq(syscall.EEXIST, err)
+	ogletest.ExpectEq(syscall.EEXIST, err)
 
 	// Read
 	contents, err := ioutil.ReadFile(p)
-	AssertEq(nil, err)
-	ExpectEq("taco", string(contents))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq("taco", string(contents))
 }
 
 func (t *MknodTest) NonExistentParent() {
@@ -1967,7 +1967,7 @@ func (t *MknodTest) NonExistentParent() {
 	p := path.Join(t.Dir, "foo/bar")
 
 	err = syscall.Mknod(p, syscall.S_IFREG|0600, 0)
-	ExpectEq(syscall.ENOENT, err)
+	ogletest.ExpectEq(syscall.ENOENT, err)
 }
 
 func (t *MknodTest) Fallocate_Larger() {
@@ -1976,24 +1976,24 @@ func (t *MknodTest) Fallocate_Larger() {
 
 	// Create a file.
 	err = ioutil.WriteFile(fileName, []byte("taco"), 0600)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Open it for modification.
 	f, err := os.OpenFile(fileName, os.O_RDWR, 0)
 	t.ToClose = append(t.ToClose, f)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Truncate it.
 	err = fallocate.Fallocate(f, 5, 1)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Stat it.
 	fi, err := f.Stat()
-	AssertEq(nil, err)
-	ExpectEq(6, fi.Size())
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq(6, fi.Size())
 
 	// Read the contents.
 	contents, err := ioutil.ReadFile(fileName)
-	AssertEq(nil, err)
-	ExpectEq("taco\x00\x00", string(contents))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq("taco\x00\x00", string(contents))
 }

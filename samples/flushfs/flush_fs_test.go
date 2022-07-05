@@ -33,11 +33,11 @@ import (
 	"github.com/jacobsa/fuse/fsutil"
 	"github.com/jacobsa/fuse/fusetesting"
 	"github.com/jacobsa/fuse/samples"
-	. "github.com/jacobsa/oglematchers"
-	. "github.com/jacobsa/ogletest"
+	"github.com/jacobsa/oglematchers"
+	"github.com/jacobsa/ogletest"
 )
 
-func TestFlushFS(t *testing.T) { RunTests(t) }
+func TestFlushFS(t *testing.T) { ogletest.RunTests(t) }
 
 ////////////////////////////////////////////////////////////////////////
 // Boilerplate
@@ -56,7 +56,7 @@ type flushFSTest struct {
 }
 
 func (t *flushFSTest) setUp(
-	ti *TestInfo,
+	ti *ogletest.TestInfo,
 	flushErr syscall.Errno,
 	fsyncErr syscall.Errno,
 	readOnly bool) {
@@ -64,10 +64,10 @@ func (t *flushFSTest) setUp(
 
 	// Set up files to receive flush and fsync reports.
 	t.flushes, err = fsutil.AnonymousFile("")
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	t.fsyncs, err = fsutil.AnonymousFile("")
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Set up test config.
 	t.MountType = "flushfs"
@@ -102,11 +102,11 @@ func (t *flushFSTest) TearDown() {
 
 	// Close test files if non-nil.
 	if t.f1 != nil {
-		ExpectEq(nil, t.f1.Close())
+		ogletest.ExpectEq(nil, t.f1.Close())
 	}
 
 	if t.f2 != nil {
-		ExpectEq(nil, t.f2.Close())
+		ogletest.ExpectEq(nil, t.f2.Close())
 	}
 
 	// Finish tearing down.
@@ -201,9 +201,9 @@ type NoErrorsTest struct {
 	flushFSTest
 }
 
-func init() { RegisterTestSuite(&NoErrorsTest{}) }
+func init() { ogletest.RegisterTestSuite(&NoErrorsTest{}) }
 
-func (t *NoErrorsTest) SetUp(ti *TestInfo) {
+func (t *NoErrorsTest) SetUp(ti *ogletest.TestInfo) {
 	const noErr = 0
 	t.flushFSTest.setUp(ti, noErr, noErr, false)
 }
@@ -216,34 +216,34 @@ func (t *NoErrorsTest) Close_ReadWrite() {
 
 	// Open the file.
 	t.f1, err = os.OpenFile(path.Join(t.Dir, "foo"), os.O_RDWR, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Write some contents to the file.
 	n, err = t.f1.Write([]byte("taco"))
-	AssertEq(nil, err)
-	AssertEq(4, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(4, n)
 
 	// Seek and read them back.
 	off, err = t.f1.Seek(0, 0)
-	AssertEq(nil, err)
-	AssertEq(0, off)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(0, off)
 
 	n, err = t.f1.Read(buf)
-	AssertThat(err, AnyOf(nil, io.EOF))
-	AssertEq("taco", string(buf[:n]))
+	ogletest.AssertThat(err, oglematchers.AnyOf(nil, io.EOF))
+	ogletest.AssertEq("taco", string(buf[:n]))
 
 	// At this point, no flushes or fsyncs should have happened.
-	AssertThat(t.getFlushes(), ElementsAre())
-	AssertThat(t.getFsyncs(), ElementsAre())
+	ogletest.AssertThat(t.getFlushes(), oglematchers.ElementsAre())
+	ogletest.AssertThat(t.getFsyncs(), oglematchers.ElementsAre())
 
 	// Close the file.
 	err = t.f1.Close()
 	t.f1 = nil
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Now we should have received the flush operation (but still no fsync).
-	ExpectThat(t.getFlushes(), ElementsAre("taco"))
-	ExpectThat(t.getFsyncs(), ElementsAre())
+	ogletest.ExpectThat(t.getFlushes(), oglematchers.ElementsAre("taco"))
+	ogletest.ExpectThat(t.getFsyncs(), oglematchers.ElementsAre())
 }
 
 func (t *NoErrorsTest) Close_ReadOnly() {
@@ -251,20 +251,20 @@ func (t *NoErrorsTest) Close_ReadOnly() {
 
 	// Open the file.
 	t.f1, err = os.OpenFile(path.Join(t.Dir, "foo"), os.O_RDONLY, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// At this point, no flushes or fsyncs should have happened.
-	AssertThat(t.getFlushes(), ElementsAre())
-	AssertThat(t.getFsyncs(), ElementsAre())
+	ogletest.AssertThat(t.getFlushes(), oglematchers.ElementsAre())
+	ogletest.AssertThat(t.getFsyncs(), oglematchers.ElementsAre())
 
 	// Close the file.
 	err = t.f1.Close()
 	t.f1 = nil
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Now we should have received the flush operation (but still no fsync).
-	ExpectThat(t.getFlushes(), ElementsAre(""))
-	ExpectThat(t.getFsyncs(), ElementsAre())
+	ogletest.ExpectThat(t.getFlushes(), oglematchers.ElementsAre(""))
+	ogletest.ExpectThat(t.getFsyncs(), oglematchers.ElementsAre())
 }
 
 func (t *NoErrorsTest) Close_WriteOnly() {
@@ -273,25 +273,25 @@ func (t *NoErrorsTest) Close_WriteOnly() {
 
 	// Open the file.
 	t.f1, err = os.OpenFile(path.Join(t.Dir, "foo"), os.O_WRONLY, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Write some contents to the file.
 	n, err = t.f1.Write([]byte("taco"))
-	AssertEq(nil, err)
-	AssertEq(4, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(4, n)
 
 	// At this point, no flushes or fsyncs should have happened.
-	AssertThat(t.getFlushes(), ElementsAre())
-	AssertThat(t.getFsyncs(), ElementsAre())
+	ogletest.AssertThat(t.getFlushes(), oglematchers.ElementsAre())
+	ogletest.AssertThat(t.getFsyncs(), oglematchers.ElementsAre())
 
 	// Close the file.
 	err = t.f1.Close()
 	t.f1 = nil
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Now we should have received the flush operation (but still no fsync).
-	ExpectThat(t.getFlushes(), ElementsAre("taco"))
-	ExpectThat(t.getFsyncs(), ElementsAre())
+	ogletest.ExpectThat(t.getFlushes(), oglematchers.ElementsAre("taco"))
+	ogletest.ExpectThat(t.getFsyncs(), oglematchers.ElementsAre())
 }
 
 func (t *NoErrorsTest) Close_MultipleTimes_NonOverlappingFileHandles() {
@@ -300,45 +300,45 @@ func (t *NoErrorsTest) Close_MultipleTimes_NonOverlappingFileHandles() {
 
 	// Open the file.
 	t.f1, err = os.OpenFile(path.Join(t.Dir, "foo"), os.O_WRONLY, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Write some contents to the file.
 	n, err = t.f1.Write([]byte("taco"))
-	AssertEq(nil, err)
-	AssertEq(4, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(4, n)
 
 	// At this point, no flushes or fsyncs should have happened.
-	AssertThat(t.getFlushes(), ElementsAre())
-	AssertThat(t.getFsyncs(), ElementsAre())
+	ogletest.AssertThat(t.getFlushes(), oglematchers.ElementsAre())
+	ogletest.AssertThat(t.getFsyncs(), oglematchers.ElementsAre())
 
 	// Close the file.
 	err = t.f1.Close()
 	t.f1 = nil
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Now we should have received the flush operation (but still no fsync).
-	AssertThat(t.getFlushes(), ElementsAre("taco"))
-	AssertThat(t.getFsyncs(), ElementsAre())
+	ogletest.AssertThat(t.getFlushes(), oglematchers.ElementsAre("taco"))
+	ogletest.AssertThat(t.getFsyncs(), oglematchers.ElementsAre())
 
 	// Open the file again.
 	t.f1, err = os.OpenFile(path.Join(t.Dir, "foo"), os.O_WRONLY, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Write again; expect no further flushes.
 	n, err = t.f1.Write([]byte("p"))
-	AssertEq(nil, err)
-	AssertEq(1, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(1, n)
 
-	AssertThat(t.getFlushes(), ElementsAre("taco"))
-	AssertThat(t.getFsyncs(), ElementsAre())
+	ogletest.AssertThat(t.getFlushes(), oglematchers.ElementsAre("taco"))
+	ogletest.AssertThat(t.getFsyncs(), oglematchers.ElementsAre())
 
 	// Close the file. Now the new contents should be flushed.
 	err = t.f1.Close()
 	t.f1 = nil
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
-	AssertThat(t.getFlushes(), ElementsAre("taco", "paco"))
-	AssertThat(t.getFsyncs(), ElementsAre())
+	ogletest.AssertThat(t.getFlushes(), oglematchers.ElementsAre("taco", "paco"))
+	ogletest.AssertThat(t.getFsyncs(), oglematchers.ElementsAre())
 }
 
 func (t *NoErrorsTest) Close_MultipleTimes_OverlappingFileHandles() {
@@ -347,47 +347,47 @@ func (t *NoErrorsTest) Close_MultipleTimes_OverlappingFileHandles() {
 
 	// Open the file with two handles.
 	t.f1, err = os.OpenFile(path.Join(t.Dir, "foo"), os.O_WRONLY, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	t.f2, err = os.OpenFile(path.Join(t.Dir, "foo"), os.O_WRONLY, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Write some contents with each handle.
 	n, err = t.f1.Write([]byte("taco"))
-	AssertEq(nil, err)
-	AssertEq(4, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(4, n)
 
 	n, err = t.f2.Write([]byte("p"))
-	AssertEq(nil, err)
-	AssertEq(1, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(1, n)
 
 	// At this point, no flushes or fsyncs should have happened.
-	AssertThat(t.getFlushes(), ElementsAre())
-	AssertThat(t.getFsyncs(), ElementsAre())
+	ogletest.AssertThat(t.getFlushes(), oglematchers.ElementsAre())
+	ogletest.AssertThat(t.getFsyncs(), oglematchers.ElementsAre())
 
 	// Close one handle. The current contents should be flushed.
 	err = t.f1.Close()
 	t.f1 = nil
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
-	AssertThat(t.getFlushes(), ElementsAre("paco"))
-	AssertThat(t.getFsyncs(), ElementsAre())
+	ogletest.AssertThat(t.getFlushes(), oglematchers.ElementsAre("paco"))
+	ogletest.AssertThat(t.getFsyncs(), oglematchers.ElementsAre())
 
 	// Write some more contents via the other handle. Again, no further flushes.
 	n, err = t.f2.Write([]byte("orp"))
-	AssertEq(nil, err)
-	AssertEq(3, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(3, n)
 
-	AssertThat(t.getFlushes(), ElementsAre("paco"))
-	AssertThat(t.getFsyncs(), ElementsAre())
+	ogletest.AssertThat(t.getFlushes(), oglematchers.ElementsAre("paco"))
+	ogletest.AssertThat(t.getFsyncs(), oglematchers.ElementsAre())
 
 	// Close the handle. Now the new contents should be flushed.
 	err = t.f2.Close()
 	t.f2 = nil
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
-	AssertThat(t.getFlushes(), ElementsAre("paco", "porp"))
-	AssertThat(t.getFsyncs(), ElementsAre())
+	ogletest.AssertThat(t.getFlushes(), oglematchers.ElementsAre("paco", "porp"))
+	ogletest.AssertThat(t.getFsyncs(), oglematchers.ElementsAre())
 }
 
 func (t *NoErrorsTest) Fsync() {
@@ -396,37 +396,37 @@ func (t *NoErrorsTest) Fsync() {
 
 	// Open the file.
 	t.f1, err = os.OpenFile(path.Join(t.Dir, "foo"), os.O_WRONLY, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Write some contents to the file.
 	n, err = t.f1.Write([]byte("taco"))
-	AssertEq(nil, err)
-	AssertEq(4, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(4, n)
 
-	AssertThat(t.getFlushes(), ElementsAre())
-	AssertThat(t.getFsyncs(), ElementsAre())
+	ogletest.AssertThat(t.getFlushes(), oglematchers.ElementsAre())
+	ogletest.AssertThat(t.getFsyncs(), oglematchers.ElementsAre())
 
 	// Fsync.
 	err = t.f1.Sync()
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
-	AssertThat(t.getFlushes(), ElementsAre())
-	AssertThat(t.getFsyncs(), ElementsAre("taco"))
+	ogletest.AssertThat(t.getFlushes(), oglematchers.ElementsAre())
+	ogletest.AssertThat(t.getFsyncs(), oglematchers.ElementsAre("taco"))
 
 	// Write some more contents.
 	n, err = t.f1.Write([]byte("s"))
-	AssertEq(nil, err)
-	AssertEq(1, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(1, n)
 
-	AssertThat(t.getFlushes(), ElementsAre())
-	AssertThat(t.getFsyncs(), ElementsAre("taco"))
+	ogletest.AssertThat(t.getFlushes(), oglematchers.ElementsAre())
+	ogletest.AssertThat(t.getFsyncs(), oglematchers.ElementsAre("taco"))
 
 	// Fsync.
 	err = t.f1.Sync()
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
-	AssertThat(t.getFlushes(), ElementsAre())
-	AssertThat(t.getFsyncs(), ElementsAre("taco", "tacos"))
+	ogletest.AssertThat(t.getFlushes(), oglematchers.ElementsAre())
+	ogletest.AssertThat(t.getFsyncs(), oglematchers.ElementsAre("taco", "tacos"))
 }
 
 func (t *NoErrorsTest) Fdatasync() {
@@ -439,37 +439,37 @@ func (t *NoErrorsTest) Fdatasync() {
 
 	// Open the file.
 	t.f1, err = os.OpenFile(path.Join(t.Dir, "foo"), os.O_WRONLY, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Write some contents to the file.
 	n, err = t.f1.Write([]byte("taco"))
-	AssertEq(nil, err)
-	AssertEq(4, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(4, n)
 
-	AssertThat(t.getFlushes(), ElementsAre())
-	AssertThat(t.getFsyncs(), ElementsAre())
+	ogletest.AssertThat(t.getFlushes(), oglematchers.ElementsAre())
+	ogletest.AssertThat(t.getFsyncs(), oglematchers.ElementsAre())
 
 	// Fdatasync.
 	err = fsutil.Fdatasync(t.f1)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
-	AssertThat(t.getFlushes(), ElementsAre())
-	AssertThat(t.getFsyncs(), ElementsAre("taco"))
+	ogletest.AssertThat(t.getFlushes(), oglematchers.ElementsAre())
+	ogletest.AssertThat(t.getFsyncs(), oglematchers.ElementsAre("taco"))
 
 	// Write some more contents.
 	n, err = t.f1.Write([]byte("s"))
-	AssertEq(nil, err)
-	AssertEq(1, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(1, n)
 
-	AssertThat(t.getFlushes(), ElementsAre())
-	AssertThat(t.getFsyncs(), ElementsAre("taco"))
+	ogletest.AssertThat(t.getFlushes(), oglematchers.ElementsAre())
+	ogletest.AssertThat(t.getFsyncs(), oglematchers.ElementsAre("taco"))
 
 	// Fdatasync.
 	err = fsutil.Fdatasync(t.f1)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
-	AssertThat(t.getFlushes(), ElementsAre())
-	AssertThat(t.getFsyncs(), ElementsAre("taco", "tacos"))
+	ogletest.AssertThat(t.getFlushes(), oglematchers.ElementsAre())
+	ogletest.AssertThat(t.getFsyncs(), oglematchers.ElementsAre("taco", "tacos"))
 }
 
 func (t *NoErrorsTest) Dup() {
@@ -480,59 +480,59 @@ func (t *NoErrorsTest) Dup() {
 
 	// Open the file.
 	t.f1, err = os.OpenFile(path.Join(t.Dir, "foo"), os.O_WRONLY, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	fd1 := t.f1.Fd()
 
 	// Use dup(2) to get another copy.
 	fd2, err := syscall.Dup(int(fd1))
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	t.f2 = os.NewFile(uintptr(fd2), t.f1.Name())
 
 	// Write some contents with each handle.
 	n, err = t.f1.Write([]byte("taco"))
-	AssertEq(nil, err)
-	AssertEq(4, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(4, n)
 
 	n, err = t.f2.Write([]byte("s"))
-	AssertEq(nil, err)
-	AssertEq(1, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(1, n)
 
 	// At this point, no flushes or fsyncs should have happened.
-	AssertThat(t.getFlushes(), ElementsAre())
-	AssertThat(t.getFsyncs(), ElementsAre())
+	ogletest.AssertThat(t.getFlushes(), oglematchers.ElementsAre())
+	ogletest.AssertThat(t.getFsyncs(), oglematchers.ElementsAre())
 
 	// Close one handle. On Linux the current contents should be flushed. On OS
 	// X, where the semantics of handles are different, they apparently are not.
 	// (Cf. https://github.com/osxfuse/osxfuse/issues/199)
 	err = t.f1.Close()
 	t.f1 = nil
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	if !isDarwin {
 		expectedFlushes = append(expectedFlushes, "tacos")
 	}
 
-	AssertThat(t.getFlushes(), ElementsAre(expectedFlushes...))
-	AssertThat(t.getFsyncs(), ElementsAre())
+	ogletest.AssertThat(t.getFlushes(), oglematchers.ElementsAre(expectedFlushes...))
+	ogletest.AssertThat(t.getFsyncs(), oglematchers.ElementsAre())
 
 	// Write some more contents via the other handle. Again, no further flushes.
 	n, err = t.f2.Write([]byte("!"))
-	AssertEq(nil, err)
-	AssertEq(1, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(1, n)
 
-	AssertThat(t.getFlushes(), ElementsAre(expectedFlushes...))
-	AssertThat(t.getFsyncs(), ElementsAre())
+	ogletest.AssertThat(t.getFlushes(), oglematchers.ElementsAre(expectedFlushes...))
+	ogletest.AssertThat(t.getFsyncs(), oglematchers.ElementsAre())
 
 	// Close the handle. Now the new contents should be flushed.
 	err = t.f2.Close()
 	t.f2 = nil
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	expectedFlushes = append(expectedFlushes, "tacos!")
-	ExpectThat(t.getFlushes(), ElementsAre(expectedFlushes...))
-	ExpectThat(t.getFsyncs(), ElementsAre())
+	ogletest.ExpectThat(t.getFlushes(), oglematchers.ElementsAre(expectedFlushes...))
+	ogletest.ExpectThat(t.getFsyncs(), oglematchers.ElementsAre())
 }
 
 func (t *NoErrorsTest) Dup2() {
@@ -541,24 +541,24 @@ func (t *NoErrorsTest) Dup2() {
 
 	// Open the file.
 	t.f1, err = os.OpenFile(path.Join(t.Dir, "foo"), os.O_WRONLY, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Write some contents to the file.
 	n, err = t.f1.Write([]byte("taco"))
-	AssertEq(nil, err)
-	AssertEq(4, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(4, n)
 
 	// Create some anonymous temporary file.
 	t.f2, err = fsutil.AnonymousFile("")
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Duplicate the temporary file descriptor on top of the file from our file
 	// system. We should see a flush.
 	err = dup2(int(t.f2.Fd()), int(t.f1.Fd()))
-	ExpectEq(nil, err)
+	ogletest.ExpectEq(nil, err)
 
-	ExpectThat(t.getFlushes(), ElementsAre("taco"))
-	ExpectThat(t.getFsyncs(), ElementsAre())
+	ogletest.ExpectThat(t.getFlushes(), oglematchers.ElementsAre("taco"))
+	ogletest.ExpectThat(t.getFsyncs(), oglematchers.ElementsAre())
 }
 
 func (t *NoErrorsTest) Mmap_NoMsync_MunmapBeforeClose() {
@@ -567,12 +567,12 @@ func (t *NoErrorsTest) Mmap_NoMsync_MunmapBeforeClose() {
 
 	// Open the file.
 	t.f1, err = os.OpenFile(path.Join(t.Dir, "foo"), os.O_RDWR, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Write some contents to the file.
 	n, err = t.f1.Write([]byte("taco"))
-	AssertEq(nil, err)
-	AssertEq(4, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(4, n)
 
 	// mmap the file.
 	data, err := syscall.Mmap(
@@ -580,29 +580,29 @@ func (t *NoErrorsTest) Mmap_NoMsync_MunmapBeforeClose() {
 		syscall.PROT_READ|syscall.PROT_WRITE,
 		syscall.MAP_SHARED)
 
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 	defer syscall.Munmap(data)
 
-	AssertEq("taco", string(data))
+	ogletest.AssertEq("taco", string(data))
 
 	// Modify the contents.
 	data[0] = 'p'
 
 	// Unmap.
 	err = syscall.Munmap(data)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// munmap does not cause a flush.
-	ExpectThat(t.getFlushes(), ElementsAre())
-	ExpectThat(t.getFsyncs(), ElementsAre())
+	ogletest.ExpectThat(t.getFlushes(), oglematchers.ElementsAre())
+	ogletest.ExpectThat(t.getFsyncs(), oglematchers.ElementsAre())
 
 	// Close the file. We should see a flush with up to date contents.
 	err = t.f1.Close()
 	t.f1 = nil
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
-	ExpectThat(t.getFlushes(), ElementsAre("paco"))
-	ExpectThat(t.getFsyncs(), ElementsAre())
+	ogletest.ExpectThat(t.getFlushes(), oglematchers.ElementsAre("paco"))
+	ogletest.ExpectThat(t.getFsyncs(), oglematchers.ElementsAre())
 }
 
 func (t *NoErrorsTest) Mmap_NoMsync_CloseBeforeMunmap() {
@@ -611,12 +611,12 @@ func (t *NoErrorsTest) Mmap_NoMsync_CloseBeforeMunmap() {
 
 	// Open the file.
 	t.f1, err = os.OpenFile(path.Join(t.Dir, "foo"), os.O_RDWR, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Write some contents to the file.
 	n, err = t.f1.Write([]byte("taco"))
-	AssertEq(nil, err)
-	AssertEq(4, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(4, n)
 
 	// mmap the file.
 	data, err := syscall.Mmap(
@@ -624,29 +624,29 @@ func (t *NoErrorsTest) Mmap_NoMsync_CloseBeforeMunmap() {
 		syscall.PROT_READ|syscall.PROT_WRITE,
 		syscall.MAP_SHARED)
 
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 	defer syscall.Munmap(data)
 
-	AssertEq("taco", string(data))
+	ogletest.AssertEq("taco", string(data))
 
 	// Close the file. We should see a flush.
 	err = t.f1.Close()
 	t.f1 = nil
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
-	AssertThat(t.getFlushes(), ElementsAre("taco"))
-	AssertThat(t.getFsyncs(), ElementsAre())
+	ogletest.AssertThat(t.getFlushes(), oglematchers.ElementsAre("taco"))
+	ogletest.AssertThat(t.getFsyncs(), oglematchers.ElementsAre())
 
 	// Modify the contents.
 	data[0] = 'p'
 
 	// Unmap.
 	err = syscall.Munmap(data)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// munmap does not cause a flush.
-	ExpectThat(t.getFlushes(), ElementsAre("taco"))
-	ExpectThat(t.getFsyncs(), ElementsAre())
+	ogletest.ExpectThat(t.getFlushes(), oglematchers.ElementsAre("taco"))
+	ogletest.ExpectThat(t.getFsyncs(), oglematchers.ElementsAre())
 }
 
 func (t *NoErrorsTest) Mmap_WithMsync_MunmapBeforeClose() {
@@ -657,12 +657,12 @@ func (t *NoErrorsTest) Mmap_WithMsync_MunmapBeforeClose() {
 
 	// Open the file.
 	t.f1, err = os.OpenFile(path.Join(t.Dir, "foo"), os.O_RDWR, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Write some contents to the file.
 	n, err = t.f1.Write([]byte("taco"))
-	AssertEq(nil, err)
-	AssertEq(4, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(4, n)
 
 	// mmap the file.
 	data, err := syscall.Mmap(
@@ -670,10 +670,10 @@ func (t *NoErrorsTest) Mmap_WithMsync_MunmapBeforeClose() {
 		syscall.PROT_READ|syscall.PROT_WRITE,
 		syscall.MAP_SHARED)
 
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 	defer syscall.Munmap(data)
 
-	AssertEq("taco", string(data))
+	ogletest.AssertEq("taco", string(data))
 
 	// Modify the contents.
 	data[0] = 'p'
@@ -681,30 +681,30 @@ func (t *NoErrorsTest) Mmap_WithMsync_MunmapBeforeClose() {
 	// msync. This causes an fsync, except on OS X (cf.
 	// https://github.com/osxfuse/osxfuse/issues/202).
 	err = msync(data)
-	ExpectEq(nil, err)
+	ogletest.ExpectEq(nil, err)
 
 	if !isDarwin {
 		expectedFsyncs = append(expectedFsyncs, "paco")
 	}
 
-	ExpectThat(t.getFlushes(), ElementsAre())
-	ExpectThat(t.getFsyncs(), ElementsAre(expectedFsyncs...))
+	ogletest.ExpectThat(t.getFlushes(), oglematchers.ElementsAre())
+	ogletest.ExpectThat(t.getFsyncs(), oglematchers.ElementsAre(expectedFsyncs...))
 
 	// Unmap. This does not cause anything.
 	err = syscall.Munmap(data)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
-	ExpectThat(t.getFlushes(), ElementsAre())
-	ExpectThat(t.getFsyncs(), ElementsAre(expectedFsyncs...))
+	ogletest.ExpectThat(t.getFlushes(), oglematchers.ElementsAre())
+	ogletest.ExpectThat(t.getFsyncs(), oglematchers.ElementsAre(expectedFsyncs...))
 
 	// Close the file. We should now see a flush with the modified contents, even
 	// on OS X.
 	err = t.f1.Close()
 	t.f1 = nil
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
-	ExpectThat(t.getFlushes(), ElementsAre("paco"))
-	ExpectThat(t.getFsyncs(), ElementsAre(expectedFsyncs...))
+	ogletest.ExpectThat(t.getFlushes(), oglematchers.ElementsAre("paco"))
+	ogletest.ExpectThat(t.getFsyncs(), oglematchers.ElementsAre(expectedFsyncs...))
 }
 
 func (t *NoErrorsTest) Mmap_WithMsync_CloseBeforeMunmap() {
@@ -715,12 +715,12 @@ func (t *NoErrorsTest) Mmap_WithMsync_CloseBeforeMunmap() {
 
 	// Open the file.
 	t.f1, err = os.OpenFile(path.Join(t.Dir, "foo"), os.O_RDWR, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Write some contents to the file.
 	n, err = t.f1.Write([]byte("taco"))
-	AssertEq(nil, err)
-	AssertEq(4, n)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(4, n)
 
 	// mmap the file.
 	data, err := syscall.Mmap(
@@ -728,18 +728,18 @@ func (t *NoErrorsTest) Mmap_WithMsync_CloseBeforeMunmap() {
 		syscall.PROT_READ|syscall.PROT_WRITE,
 		syscall.MAP_SHARED)
 
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 	defer syscall.Munmap(data)
 
-	AssertEq("taco", string(data))
+	ogletest.AssertEq("taco", string(data))
 
 	// Close the file. We should see a flush.
 	err = t.f1.Close()
 	t.f1 = nil
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
-	AssertThat(t.getFlushes(), ElementsAre("taco"))
-	AssertThat(t.getFsyncs(), ElementsAre())
+	ogletest.AssertThat(t.getFlushes(), oglematchers.ElementsAre("taco"))
+	ogletest.AssertThat(t.getFsyncs(), oglematchers.ElementsAre())
 
 	// Modify the contents.
 	data[0] = 'p'
@@ -747,21 +747,21 @@ func (t *NoErrorsTest) Mmap_WithMsync_CloseBeforeMunmap() {
 	// msync. This causes an fsync, except on OS X (cf.
 	// https://github.com/osxfuse/osxfuse/issues/202).
 	err = msync(data)
-	ExpectEq(nil, err)
+	ogletest.ExpectEq(nil, err)
 
 	if !isDarwin {
 		expectedFsyncs = append(expectedFsyncs, "paco")
 	}
 
-	ExpectThat(t.getFlushes(), ElementsAre("taco"))
-	ExpectThat(t.getFsyncs(), ElementsAre(expectedFsyncs...))
+	ogletest.ExpectThat(t.getFlushes(), oglematchers.ElementsAre("taco"))
+	ogletest.ExpectThat(t.getFsyncs(), oglematchers.ElementsAre(expectedFsyncs...))
 
 	// Unmap. Again, this does not cause a flush.
 	err = syscall.Munmap(data)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
-	ExpectThat(t.getFlushes(), ElementsAre("taco"))
-	ExpectThat(t.getFsyncs(), ElementsAre(expectedFsyncs...))
+	ogletest.ExpectThat(t.getFlushes(), oglematchers.ElementsAre("taco"))
+	ogletest.ExpectThat(t.getFsyncs(), oglematchers.ElementsAre(expectedFsyncs...))
 }
 
 func (t *NoErrorsTest) Directory() {
@@ -769,24 +769,24 @@ func (t *NoErrorsTest) Directory() {
 
 	// Open the directory.
 	t.f1, err = os.Open(path.Join(t.Dir, "bar"))
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Sanity check: stat it.
 	fi, err := t.f1.Stat()
-	AssertEq(nil, err)
-	AssertEq(0777|os.ModeDir, fi.Mode())
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(0777|os.ModeDir, fi.Mode())
 
 	// Sync it.
 	err = t.f1.Sync()
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Close it.
 	err = t.f1.Close()
 	t.f1 = nil
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// No flushes or fsync requests should have been received.
-	ExpectThat(t.getFlushes(), ElementsAre())
+	ogletest.ExpectThat(t.getFlushes(), oglematchers.ElementsAre())
 
 	// TODO(stapelberg): this test fails on my machine (Linux 5.13.5, with Go
 	// 1.16.6), not yet sure why:
@@ -801,9 +801,9 @@ type FlushErrorTest struct {
 	flushFSTest
 }
 
-func init() { RegisterTestSuite(&FlushErrorTest{}) }
+func init() { ogletest.RegisterTestSuite(&FlushErrorTest{}) }
 
-func (t *FlushErrorTest) SetUp(ti *TestInfo) {
+func (t *FlushErrorTest) SetUp(ti *ogletest.TestInfo) {
 	const noErr = 0
 	t.flushFSTest.setUp(ti, syscall.ENOENT, noErr, false)
 }
@@ -813,13 +813,13 @@ func (t *FlushErrorTest) Close() {
 
 	// Open the file.
 	t.f1, err = os.OpenFile(path.Join(t.Dir, "foo"), os.O_RDWR, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Close the file.
 	err = t.f1.Close()
 	t.f1 = nil
 
-	ExpectThat(err, Error(HasSubstr("no such file")))
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("no such file")))
 }
 
 func (t *FlushErrorTest) Dup() {
@@ -827,13 +827,13 @@ func (t *FlushErrorTest) Dup() {
 
 	// Open the file.
 	t.f1, err = os.OpenFile(path.Join(t.Dir, "foo"), os.O_WRONLY, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	fd1 := t.f1.Fd()
 
 	// Use dup(2) to get another copy.
 	fd2, err := syscall.Dup(int(fd1))
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	t.f2 = os.NewFile(uintptr(fd2), t.f1.Name())
 
@@ -844,16 +844,16 @@ func (t *FlushErrorTest) Dup() {
 	t.f1 = nil
 
 	if isDarwin {
-		AssertEq(nil, err)
+		ogletest.AssertEq(nil, err)
 	} else {
-		ExpectThat(err, Error(HasSubstr("no such file")))
+		ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("no such file")))
 	}
 
 	// Close by the second handle.
 	err = t.f2.Close()
 	t.f2 = nil
 
-	ExpectThat(err, Error(HasSubstr("no such file")))
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("no such file")))
 }
 
 func (t *FlushErrorTest) Dup2() {
@@ -861,16 +861,16 @@ func (t *FlushErrorTest) Dup2() {
 
 	// Open the file.
 	t.f1, err = os.OpenFile(path.Join(t.Dir, "foo"), os.O_WRONLY, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Create some anonymous temporary file.
 	t.f2, err = fsutil.AnonymousFile("")
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Duplicate the temporary file descriptor on top of the file from our file
 	// system. We shouldn't see the flush error.
 	err = dup2(int(t.f2.Fd()), int(t.f1.Fd()))
-	ExpectEq(nil, err)
+	ogletest.ExpectEq(nil, err)
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -881,9 +881,9 @@ type FsyncErrorTest struct {
 	flushFSTest
 }
 
-func init() { RegisterTestSuite(&FsyncErrorTest{}) }
+func init() { ogletest.RegisterTestSuite(&FsyncErrorTest{}) }
 
-func (t *FsyncErrorTest) SetUp(ti *TestInfo) {
+func (t *FsyncErrorTest) SetUp(ti *ogletest.TestInfo) {
 	const noErr = 0
 	t.flushFSTest.setUp(ti, noErr, syscall.ENOENT, false)
 }
@@ -893,12 +893,12 @@ func (t *FsyncErrorTest) Fsync() {
 
 	// Open the file.
 	t.f1, err = os.OpenFile(path.Join(t.Dir, "foo"), os.O_RDWR, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Fsync.
 	err = t.f1.Sync()
 
-	ExpectThat(err, Error(HasSubstr("no such file")))
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("no such file")))
 }
 
 func (t *FsyncErrorTest) Fdatasync() {
@@ -910,12 +910,12 @@ func (t *FsyncErrorTest) Fdatasync() {
 
 	// Open the file.
 	t.f1, err = os.OpenFile(path.Join(t.Dir, "foo"), os.O_RDWR, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Fdatasync.
 	err = fsutil.Fdatasync(t.f1)
 
-	ExpectThat(err, Error(HasSubstr("no such file")))
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("no such file")))
 }
 
 func (t *FsyncErrorTest) Msync() {
@@ -928,7 +928,7 @@ func (t *FsyncErrorTest) Msync() {
 
 	// Open the file.
 	t.f1, err = os.OpenFile(path.Join(t.Dir, "foo"), os.O_RDWR, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// mmap the file.
 	data, err := syscall.Mmap(
@@ -936,16 +936,16 @@ func (t *FsyncErrorTest) Msync() {
 		syscall.PROT_READ|syscall.PROT_WRITE,
 		syscall.MAP_SHARED)
 
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 	defer syscall.Munmap(data)
 
 	// msync the mapping.
 	err = msync(data)
-	ExpectThat(err, Error(HasSubstr("no such file")))
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("no such file")))
 
 	// Unmap.
 	err = syscall.Munmap(data)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -956,9 +956,9 @@ type ReadOnlyTest struct {
 	flushFSTest
 }
 
-func init() { RegisterTestSuite(&ReadOnlyTest{}) }
+func init() { ogletest.RegisterTestSuite(&ReadOnlyTest{}) }
 
-func (t *ReadOnlyTest) SetUp(ti *TestInfo) {
+func (t *ReadOnlyTest) SetUp(ti *ogletest.TestInfo) {
 	const noErr = 0
 	t.flushFSTest.setUp(ti, noErr, noErr, true)
 }
@@ -968,18 +968,18 @@ func (t *ReadOnlyTest) ReadRoot() {
 
 	// Read.
 	entries, err := fusetesting.ReadDirPicky(t.Dir)
-	AssertEq(nil, err)
-	AssertEq(2, len(entries))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(2, len(entries))
 
 	// bar
 	fi = entries[0]
-	ExpectEq("bar", fi.Name())
-	ExpectEq(os.FileMode(0777)|os.ModeDir, fi.Mode())
+	ogletest.ExpectEq("bar", fi.Name())
+	ogletest.ExpectEq(os.FileMode(0777)|os.ModeDir, fi.Mode())
 
 	// foo
 	fi = entries[1]
-	ExpectEq("foo", fi.Name())
-	ExpectEq(os.FileMode(0777), fi.Mode())
+	ogletest.ExpectEq("foo", fi.Name())
+	ogletest.ExpectEq(os.FileMode(0777), fi.Mode())
 }
 
 func (t *ReadOnlyTest) StatFiles() {
@@ -988,37 +988,37 @@ func (t *ReadOnlyTest) StatFiles() {
 
 	// bar
 	fi, err = os.Stat(path.Join(t.Dir, "bar"))
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
-	ExpectEq("bar", fi.Name())
-	ExpectEq(os.FileMode(0777)|os.ModeDir, fi.Mode())
+	ogletest.ExpectEq("bar", fi.Name())
+	ogletest.ExpectEq(os.FileMode(0777)|os.ModeDir, fi.Mode())
 
 	// foo
 	fi, err = os.Stat(path.Join(t.Dir, "foo"))
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
-	ExpectEq("foo", fi.Name())
-	ExpectEq(os.FileMode(0777), fi.Mode())
+	ogletest.ExpectEq("foo", fi.Name())
+	ogletest.ExpectEq(os.FileMode(0777), fi.Mode())
 }
 
 func (t *ReadOnlyTest) ReadFile() {
 	_, err := ioutil.ReadFile(path.Join(t.Dir, "foo"))
-	ExpectEq(nil, err)
+	ogletest.ExpectEq(nil, err)
 }
 
 func (t *ReadOnlyTest) ReadDir() {
 	_, err := fusetesting.ReadDirPicky(path.Join(t.Dir, "bar"))
-	ExpectEq(nil, err)
+	ogletest.ExpectEq(nil, err)
 }
 
 func (t *ReadOnlyTest) CreateFile() {
 	err := ioutil.WriteFile(path.Join(t.Dir, "blah"), []byte{}, 0400)
-	ExpectThat(err, Error(HasSubstr("read-only")))
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("read-only")))
 }
 
 func (t *ReadOnlyTest) Mkdir() {
 	err := os.Mkdir(path.Join(t.Dir, "blah"), 0700)
-	ExpectThat(err, Error(HasSubstr("read-only")))
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("read-only")))
 }
 
 func (t *ReadOnlyTest) OpenForWrite() {
@@ -1030,16 +1030,16 @@ func (t *ReadOnlyTest) OpenForWrite() {
 	for _, mode := range modes {
 		f, err := os.OpenFile(path.Join(t.Dir, "foo"), mode, 0700)
 		f.Close()
-		ExpectThat(err, Error(HasSubstr("read-only")), "mode: %v", mode)
+		ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("read-only")), "mode: %v", mode)
 	}
 }
 
 func (t *ReadOnlyTest) Chtimes() {
 	err := os.Chtimes(path.Join(t.Dir, "foo"), time.Now(), time.Now())
-	ExpectThat(err, Error(MatchesRegexp("read-only|not permitted|permission denied")))
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.MatchesRegexp("read-only|not permitted|permission denied")))
 }
 
 func (t *ReadOnlyTest) Chmod() {
 	err := os.Chmod(path.Join(t.Dir, "foo"), 0700)
-	ExpectThat(err, Error(HasSubstr("read-only")))
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("read-only")))
 }

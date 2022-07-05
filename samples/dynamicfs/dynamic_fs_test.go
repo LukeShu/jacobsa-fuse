@@ -15,99 +15,99 @@ import (
 	"syscall"
 	"time"
 
-	. "github.com/jacobsa/oglematchers"
-	. "github.com/jacobsa/ogletest"
+	"github.com/jacobsa/oglematchers"
+	"github.com/jacobsa/ogletest"
 )
 
-func TestDynamicFS(t *testing.T) { RunTests(t) }
+func TestDynamicFS(t *testing.T) { ogletest.RunTests(t) }
 
 type DynamicFSTest struct {
 	samples.SampleTest
 }
 
 func init() {
-	RegisterTestSuite(&DynamicFSTest{})
+	ogletest.RegisterTestSuite(&DynamicFSTest{})
 }
 
 var gCreateTime = time.Date(2017, 5, 4, 14, 53, 10, 0, time.UTC)
 
-func (t *DynamicFSTest) SetUp(ti *TestInfo) {
+func (t *DynamicFSTest) SetUp(ti *ogletest.TestInfo) {
 	var err error
 	t.Clock.SetTime(gCreateTime)
 	t.Server, err = dynamicfs.NewDynamicFS(&t.Clock)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 	t.SampleTest.SetUp(ti)
 }
 
 func (t *DynamicFSTest) ReadDir_Root() {
 	entries, err := fusetesting.ReadDirPicky(t.Dir)
-	AssertEq(nil, err)
-	AssertEq(2, len(entries))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(2, len(entries))
 
 	var fi os.FileInfo
 	fi = entries[0]
-	ExpectEq("age", fi.Name())
-	ExpectEq(0, fi.Size())
-	ExpectEq(0444, fi.Mode())
-	ExpectFalse(fi.IsDir())
+	ogletest.ExpectEq("age", fi.Name())
+	ogletest.ExpectEq(0, fi.Size())
+	ogletest.ExpectEq(0444, fi.Mode())
+	ogletest.ExpectFalse(fi.IsDir())
 
 	fi = entries[1]
-	ExpectEq("weekday", fi.Name())
-	ExpectEq(0, fi.Size())
-	ExpectEq(0444, fi.Mode())
-	ExpectFalse(fi.IsDir())
+	ogletest.ExpectEq("weekday", fi.Name())
+	ogletest.ExpectEq(0, fi.Size())
+	ogletest.ExpectEq(0444, fi.Mode())
+	ogletest.ExpectFalse(fi.IsDir())
 }
 
 func (t *DynamicFSTest) ReadDir_NonExistent() {
 	_, err := fusetesting.ReadDirPicky(path.Join(t.Dir, "nosuchfile"))
 
-	AssertNe(nil, err)
-	ExpectThat(err, Error(HasSubstr("no such file")))
+	ogletest.AssertNe(nil, err)
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("no such file")))
 }
 
 func (t *DynamicFSTest) Stat_Age() {
 	fi, err := os.Stat(path.Join(t.Dir, "age"))
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
-	ExpectEq("age", fi.Name())
-	ExpectEq(0, fi.Size())
-	ExpectEq(0444, fi.Mode())
-	ExpectFalse(fi.IsDir())
-	ExpectEq(1, fi.Sys().(*syscall.Stat_t).Nlink)
+	ogletest.ExpectEq("age", fi.Name())
+	ogletest.ExpectEq(0, fi.Size())
+	ogletest.ExpectEq(0444, fi.Mode())
+	ogletest.ExpectFalse(fi.IsDir())
+	ogletest.ExpectEq(1, fi.Sys().(*syscall.Stat_t).Nlink)
 }
 
 func (t *DynamicFSTest) Stat_Weekday() {
 	fi, err := os.Stat(path.Join(t.Dir, "weekday"))
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
-	ExpectEq("weekday", fi.Name())
-	ExpectEq(0, fi.Size())
-	ExpectEq(0444, fi.Mode())
-	ExpectFalse(fi.IsDir())
-	ExpectEq(1, fi.Sys().(*syscall.Stat_t).Nlink)
+	ogletest.ExpectEq("weekday", fi.Name())
+	ogletest.ExpectEq(0, fi.Size())
+	ogletest.ExpectEq(0444, fi.Mode())
+	ogletest.ExpectFalse(fi.IsDir())
+	ogletest.ExpectEq(1, fi.Sys().(*syscall.Stat_t).Nlink)
 }
 
 func (t *DynamicFSTest) Stat_NonExistent() {
 	_, err := os.Stat(path.Join(t.Dir, "nosuchfile"))
 
-	AssertNe(nil, err)
-	ExpectThat(err, Error(HasSubstr("no such file")))
+	ogletest.AssertNe(nil, err)
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("no such file")))
 }
 
 func (t *DynamicFSTest) ReadFile_AgeZero() {
 	t.Clock.SetTime(gCreateTime)
 	slice, err := ioutil.ReadFile(path.Join(t.Dir, "age"))
 
-	AssertEq(nil, err)
-	ExpectEq("This filesystem is 0 seconds old.", string(slice))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq("This filesystem is 0 seconds old.", string(slice))
 }
 
 func (t *DynamicFSTest) ReadFile_Age1000() {
 	t.Clock.SetTime(gCreateTime.Add(1000 * time.Second))
 	slice, err := ioutil.ReadFile(path.Join(t.Dir, "age"))
 
-	AssertEq(nil, err)
-	ExpectEq("This filesystem is 1000 seconds old.", string(slice))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq("This filesystem is 1000 seconds old.", string(slice))
 }
 
 func (t *DynamicFSTest) ReadFile_WeekdayNow() {
@@ -117,16 +117,16 @@ func (t *DynamicFSTest) ReadFile_WeekdayNow() {
 	t.Clock.SetTime(now)
 	slice, err := ioutil.ReadFile(path.Join(t.Dir, "weekday"))
 
-	AssertEq(nil, err)
-	ExpectEq(fmt.Sprintf("Today is %s.", now.Weekday().String()), string(slice))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq(fmt.Sprintf("Today is %s.", now.Weekday().String()), string(slice))
 }
 
 func (t *DynamicFSTest) ReadFile_WeekdayCreateTime() {
 	t.Clock.SetTime(gCreateTime)
 	slice, err := ioutil.ReadFile(path.Join(t.Dir, "weekday"))
 
-	AssertEq(nil, err)
-	ExpectEq(fmt.Sprintf("Today is %s.", gCreateTime.Weekday().String()), string(slice))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq(fmt.Sprintf("Today is %s.", gCreateTime.Weekday().String()), string(slice))
 }
 
 func (t *DynamicFSTest) ReadFile_AgeUnchangedForHandle() {
@@ -134,7 +134,7 @@ func (t *DynamicFSTest) ReadFile_AgeUnchangedForHandle() {
 	var err error
 	var file *os.File
 	file, err = os.Open(path.Join(t.Dir, "age"))
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Ensure that all reads from the same handle return the contents created at
 	// file open time.
@@ -147,35 +147,35 @@ func (t *DynamicFSTest) ReadFile_AgeUnchangedForHandle() {
 
 		expectedContents = "This filesystem is 100 seconds old."
 		bytesRead, err = buffer.ReadFrom(file)
-		AssertEq(nil, err)
-		ExpectEq(len(expectedContents), bytesRead)
-		ExpectEq(expectedContents, buffer.String())
+		ogletest.AssertEq(nil, err)
+		ogletest.ExpectEq(len(expectedContents), bytesRead)
+		ogletest.ExpectEq(expectedContents, buffer.String())
 
 		t.Clock.SetTime(gCreateTime.Add(1000 * time.Second))
 		// Seek back to the beginning of the file. The contents should be unchanged
 		// for the life of the file handle.
 		_, err = file.Seek(0, 0)
-		AssertEq(nil, err)
+		ogletest.AssertEq(nil, err)
 
 		buffer.Reset()
 		bytesRead, err = buffer.ReadFrom(file)
-		AssertEq(nil, err)
-		ExpectEq(len(expectedContents), bytesRead)
-		ExpectEq(expectedContents, buffer.String())
+		ogletest.AssertEq(nil, err)
+		ogletest.ExpectEq(len(expectedContents), bytesRead)
+		ogletest.ExpectEq(expectedContents, buffer.String())
 	}(file)
 
 	// The clock was advanced while the old handle was open. The content change
 	// should be reflected by the new handle.
 	file, err = os.Open(path.Join(t.Dir, "age"))
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 	func(file *os.File) {
 		defer file.Close()
 
 		expectedContents := "This filesystem is 1000 seconds old."
 		buffer := bytes.Buffer{}
 		bytesRead, err := buffer.ReadFrom(file)
-		AssertEq(nil, err)
-		ExpectEq(len(expectedContents), bytesRead)
-		ExpectEq(expectedContents, buffer.String())
+		ogletest.AssertEq(nil, err)
+		ogletest.ExpectEq(len(expectedContents), bytesRead)
+		ogletest.ExpectEq(expectedContents, buffer.String())
 	}(file)
 }

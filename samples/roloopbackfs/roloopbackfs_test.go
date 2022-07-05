@@ -27,14 +27,14 @@ import (
 
 	"github.com/jacobsa/fuse/samples"
 	"github.com/jacobsa/fuse/samples/roloopbackfs"
-	. "github.com/jacobsa/ogletest"
+	"github.com/jacobsa/ogletest"
 )
 
 var (
 	letters = []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 )
 
-func TestReadonlyLoopbackFS(t *testing.T) { RunTests(t) }
+func TestReadonlyLoopbackFS(t *testing.T) { ogletest.RunTests(t) }
 
 type ReadonlyLoopbackFSTest struct {
 	samples.SampleTest
@@ -42,11 +42,11 @@ type ReadonlyLoopbackFSTest struct {
 }
 
 func init() {
-	RegisterTestSuite(&ReadonlyLoopbackFSTest{})
+	ogletest.RegisterTestSuite(&ReadonlyLoopbackFSTest{})
 	rand.Seed(time.Now().UnixNano())
 }
 
-func (t *ReadonlyLoopbackFSTest) SetUp(ti *TestInfo) {
+func (t *ReadonlyLoopbackFSTest) SetUp(ti *ogletest.TestInfo) {
 	var err error
 
 	t.physicalPath, err = ioutil.TempDir("", "")
@@ -65,7 +65,7 @@ func (t *ReadonlyLoopbackFSTest) SetUp(ti *TestInfo) {
 		t.physicalPath,
 		log.New(os.Stdout, "", 0),
 	)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 	t.SampleTest.SetUp(ti)
 }
 
@@ -125,54 +125,54 @@ func (t *ReadonlyLoopbackFSTest) fillPhysicalFS() {
 func (t *ReadonlyLoopbackFSTest) ListDirUsingWalk() {
 	countedFiles, countedDirs := 0, 0
 	err := filepath.Walk(t.Dir, func(path string, info os.FileInfo, err error) error {
-		AssertNe(nil, info)
+		ogletest.AssertNe(nil, info)
 		if info.IsDir() {
 			countedDirs++
 		} else {
 			if strings.Contains(path, "file_1.txt") {
-				AssertEq(0, info.Size())
+				ogletest.AssertEq(0, info.Size())
 			} else {
-				AssertTrue(info.Size() > 0)
+				ogletest.AssertTrue(info.Size() > 0)
 			}
 			countedFiles++
 		}
 		return nil
 	})
-	AssertEq(nil, err)
-	AssertEq(1+10+10*5, countedDirs)
-	AssertEq(10+10*5*3, countedFiles)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(1+10+10*5, countedDirs)
+	ogletest.AssertEq(10+10*5*3, countedFiles)
 }
 
 func (t *ReadonlyLoopbackFSTest) ListDirUsingDirectQuery() {
 	infos, err := ioutil.ReadDir(filepath.Join(t.Dir, "top_dir_3"))
-	AssertEq(nil, err)
-	AssertEq(1+5, len(infos))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(1+5, len(infos))
 	for i := 0; i < 5; i++ {
-		AssertEq(fmt.Sprintf("secondary_dir_%v", i+1), infos[i].Name())
-		AssertTrue(infos[i].IsDir())
+		ogletest.AssertEq(fmt.Sprintf("secondary_dir_%v", i+1), infos[i].Name())
+		ogletest.AssertTrue(infos[i].IsDir())
 	}
-	AssertEq("secondary_file.txt", infos[5].Name())
-	AssertFalse(infos[5].IsDir())
+	ogletest.AssertEq("secondary_file.txt", infos[5].Name())
+	ogletest.AssertFalse(infos[5].IsDir())
 
 	infos, err = ioutil.ReadDir(filepath.Join(t.Dir, "top_dir_4", "secondary_dir_1"))
-	AssertEq(nil, err)
-	AssertEq(3, len(infos))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(3, len(infos))
 	for i := 0; i < 3; i++ {
-		AssertEq(fmt.Sprintf("file_%v.txt", i+1), infos[i].Name())
-		AssertFalse(infos[i].IsDir())
+		ogletest.AssertEq(fmt.Sprintf("file_%v.txt", i+1), infos[i].Name())
+		ogletest.AssertFalse(infos[i].IsDir())
 	}
 }
 
 func (t *ReadonlyLoopbackFSTest) ReadFile() {
 	bytes, err := ioutil.ReadFile(filepath.Join(t.Dir, "top_dir_1", "secondary_file.txt"))
-	AssertEq(nil, err)
-	AssertEq(17, len(bytes))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(17, len(bytes))
 
 	bytes, err = ioutil.ReadFile(filepath.Join(t.Dir, "top_dir_1", "secondary_dir_3", "file_1.txt"))
-	AssertEq(nil, err)
-	AssertEq(0, len(bytes))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(0, len(bytes))
 
 	bytes, err = ioutil.ReadFile(filepath.Join(t.Dir, "top_dir_1", "secondary_dir_3", "file_3.txt"))
-	AssertEq(nil, err)
-	AssertEq(20, len(bytes))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(20, len(bytes))
 }

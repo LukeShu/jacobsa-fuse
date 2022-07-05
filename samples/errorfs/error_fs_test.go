@@ -26,11 +26,11 @@ import (
 	"github.com/jacobsa/fuse/fuseutil"
 	"github.com/jacobsa/fuse/samples"
 	"github.com/jacobsa/fuse/samples/errorfs"
-	. "github.com/jacobsa/oglematchers"
-	. "github.com/jacobsa/ogletest"
+	"github.com/jacobsa/oglematchers"
+	"github.com/jacobsa/ogletest"
 )
 
-func TestErrorFS(t *testing.T) { RunTests(t) }
+func TestErrorFS(t *testing.T) { ogletest.RunTests(t) }
 
 ////////////////////////////////////////////////////////////////////////
 // Boilerplate
@@ -41,17 +41,17 @@ type ErrorFSTest struct {
 	fs errorfs.FS
 }
 
-func init() { RegisterTestSuite(&ErrorFSTest{}) }
+func init() { ogletest.RegisterTestSuite(&ErrorFSTest{}) }
 
-var _ SetUpInterface = &ErrorFSTest{}
-var _ TearDownInterface = &ErrorFSTest{}
+var _ ogletest.SetUpInterface = &ErrorFSTest{}
+var _ ogletest.TearDownInterface = &ErrorFSTest{}
 
-func (t *ErrorFSTest) SetUp(ti *TestInfo) {
+func (t *ErrorFSTest) SetUp(ti *ogletest.TestInfo) {
 	var err error
 
 	// Create the file system.
 	t.fs, err = errorfs.New()
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	t.Server = fuseutil.NewFileSystemServer(t.fs)
 
@@ -68,7 +68,7 @@ func (t *ErrorFSTest) OpenFile() {
 
 	f, err := os.Open(path.Join(t.Dir, "foo"))
 	defer f.Close()
-	ExpectThat(err, Error(MatchesRegexp("open.*: .*owner died")))
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.MatchesRegexp("open.*: .*owner died")))
 }
 
 func (t *ErrorFSTest) ReadFile() {
@@ -77,11 +77,11 @@ func (t *ErrorFSTest) ReadFile() {
 	// Open
 	f, err := os.Open(path.Join(t.Dir, "foo"))
 	defer f.Close()
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Read
 	_, err = ioutil.ReadAll(f)
-	ExpectThat(err, Error(MatchesRegexp("read.*: .*owner died")))
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.MatchesRegexp("read.*: .*owner died")))
 }
 
 func (t *ErrorFSTest) OpenDir() {
@@ -89,7 +89,7 @@ func (t *ErrorFSTest) OpenDir() {
 
 	f, err := os.Open(t.Dir)
 	defer f.Close()
-	ExpectThat(err, Error(MatchesRegexp("open.*: .*owner died")))
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.MatchesRegexp("open.*: .*owner died")))
 }
 
 func (t *ErrorFSTest) ReadDir() {
@@ -98,9 +98,9 @@ func (t *ErrorFSTest) ReadDir() {
 	// Open
 	f, err := os.Open(t.Dir)
 	defer f.Close()
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Read
 	_, err = f.Readdirnames(1)
-	ExpectThat(err, Error(MatchesRegexp("(read|fdopendir).*: .*owner died")))
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.MatchesRegexp("(read|fdopendir).*: .*owner died")))
 }

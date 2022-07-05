@@ -25,11 +25,11 @@ import (
 	"github.com/jacobsa/fuse/fusetesting"
 	"github.com/jacobsa/fuse/samples"
 	"github.com/jacobsa/fuse/samples/hellofs"
-	. "github.com/jacobsa/oglematchers"
-	. "github.com/jacobsa/ogletest"
+	"github.com/jacobsa/oglematchers"
+	"github.com/jacobsa/ogletest"
 )
 
-func TestHelloFS(t *testing.T) { RunTests(t) }
+func TestHelloFS(t *testing.T) { ogletest.RunTests(t) }
 
 ////////////////////////////////////////////////////////////////////////
 // Boilerplate
@@ -39,13 +39,13 @@ type HelloFSTest struct {
 	samples.SampleTest
 }
 
-func init() { RegisterTestSuite(&HelloFSTest{}) }
+func init() { ogletest.RegisterTestSuite(&HelloFSTest{}) }
 
-func (t *HelloFSTest) SetUp(ti *TestInfo) {
+func (t *HelloFSTest) SetUp(ti *ogletest.TestInfo) {
 	var err error
 
 	t.Server, err = hellofs.NewHelloFS(&t.Clock)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	t.SampleTest.SetUp(ti)
 }
@@ -57,112 +57,112 @@ func (t *HelloFSTest) SetUp(ti *TestInfo) {
 func (t *HelloFSTest) ReadDir_Root() {
 	entries, err := fusetesting.ReadDirPicky(t.Dir)
 
-	AssertEq(nil, err)
-	AssertEq(2, len(entries))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(2, len(entries))
 	var fi os.FileInfo
 
 	// dir
 	fi = entries[0]
-	ExpectEq("dir", fi.Name())
-	ExpectEq(0, fi.Size())
-	ExpectEq(os.ModeDir|0555, fi.Mode())
-	ExpectEq(0, t.Clock.Now().Sub(fi.ModTime()), "ModTime: %v", fi.ModTime())
-	ExpectTrue(fi.IsDir())
+	ogletest.ExpectEq("dir", fi.Name())
+	ogletest.ExpectEq(0, fi.Size())
+	ogletest.ExpectEq(os.ModeDir|0555, fi.Mode())
+	ogletest.ExpectEq(0, t.Clock.Now().Sub(fi.ModTime()), "ModTime: %v", fi.ModTime())
+	ogletest.ExpectTrue(fi.IsDir())
 
 	// hello
 	fi = entries[1]
-	ExpectEq("hello", fi.Name())
-	ExpectEq(len("Hello, world!"), fi.Size())
-	ExpectEq(0444, fi.Mode())
-	ExpectEq(0, t.Clock.Now().Sub(fi.ModTime()), "ModTime: %v", fi.ModTime())
-	ExpectFalse(fi.IsDir())
+	ogletest.ExpectEq("hello", fi.Name())
+	ogletest.ExpectEq(len("Hello, world!"), fi.Size())
+	ogletest.ExpectEq(0444, fi.Mode())
+	ogletest.ExpectEq(0, t.Clock.Now().Sub(fi.ModTime()), "ModTime: %v", fi.ModTime())
+	ogletest.ExpectFalse(fi.IsDir())
 }
 
 func (t *HelloFSTest) ReadDir_Dir() {
 	entries, err := fusetesting.ReadDirPicky(path.Join(t.Dir, "dir"))
 
-	AssertEq(nil, err)
-	AssertEq(1, len(entries))
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(1, len(entries))
 	var fi os.FileInfo
 
 	// world
 	fi = entries[0]
-	ExpectEq("world", fi.Name())
-	ExpectEq(len("Hello, world!"), fi.Size())
-	ExpectEq(0444, fi.Mode())
-	ExpectEq(0, t.Clock.Now().Sub(fi.ModTime()), "ModTime: %v", fi.ModTime())
-	ExpectFalse(fi.IsDir())
+	ogletest.ExpectEq("world", fi.Name())
+	ogletest.ExpectEq(len("Hello, world!"), fi.Size())
+	ogletest.ExpectEq(0444, fi.Mode())
+	ogletest.ExpectEq(0, t.Clock.Now().Sub(fi.ModTime()), "ModTime: %v", fi.ModTime())
+	ogletest.ExpectFalse(fi.IsDir())
 }
 
 func (t *HelloFSTest) ReadDir_NonExistent() {
 	_, err := fusetesting.ReadDirPicky(path.Join(t.Dir, "foobar"))
 
-	AssertNe(nil, err)
-	ExpectThat(err, Error(HasSubstr("no such file")))
+	ogletest.AssertNe(nil, err)
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("no such file")))
 }
 
 func (t *HelloFSTest) Stat_Hello() {
 	fi, err := os.Stat(path.Join(t.Dir, "hello"))
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
-	ExpectEq("hello", fi.Name())
-	ExpectEq(len("Hello, world!"), fi.Size())
-	ExpectEq(0444, fi.Mode())
-	ExpectEq(0, t.Clock.Now().Sub(fi.ModTime()), "ModTime: %v", fi.ModTime())
-	ExpectFalse(fi.IsDir())
-	ExpectEq(1, fi.Sys().(*syscall.Stat_t).Nlink)
+	ogletest.ExpectEq("hello", fi.Name())
+	ogletest.ExpectEq(len("Hello, world!"), fi.Size())
+	ogletest.ExpectEq(0444, fi.Mode())
+	ogletest.ExpectEq(0, t.Clock.Now().Sub(fi.ModTime()), "ModTime: %v", fi.ModTime())
+	ogletest.ExpectFalse(fi.IsDir())
+	ogletest.ExpectEq(1, fi.Sys().(*syscall.Stat_t).Nlink)
 }
 
 func (t *HelloFSTest) Stat_Dir() {
 	fi, err := os.Stat(path.Join(t.Dir, "dir"))
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
-	ExpectEq("dir", fi.Name())
-	ExpectEq(0, fi.Size())
-	ExpectEq(0555|os.ModeDir, fi.Mode())
-	ExpectEq(0, t.Clock.Now().Sub(fi.ModTime()), "ModTime: %v", fi.ModTime())
-	ExpectTrue(fi.IsDir())
-	ExpectEq(1, fi.Sys().(*syscall.Stat_t).Nlink)
+	ogletest.ExpectEq("dir", fi.Name())
+	ogletest.ExpectEq(0, fi.Size())
+	ogletest.ExpectEq(0555|os.ModeDir, fi.Mode())
+	ogletest.ExpectEq(0, t.Clock.Now().Sub(fi.ModTime()), "ModTime: %v", fi.ModTime())
+	ogletest.ExpectTrue(fi.IsDir())
+	ogletest.ExpectEq(1, fi.Sys().(*syscall.Stat_t).Nlink)
 }
 
 func (t *HelloFSTest) Stat_World() {
 	fi, err := os.Stat(path.Join(t.Dir, "dir/world"))
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
-	ExpectEq("world", fi.Name())
-	ExpectEq(len("Hello, world!"), fi.Size())
-	ExpectEq(0444, fi.Mode())
-	ExpectEq(0, t.Clock.Now().Sub(fi.ModTime()), "ModTime: %v", fi.ModTime())
-	ExpectFalse(fi.IsDir())
-	ExpectEq(1, fi.Sys().(*syscall.Stat_t).Nlink)
+	ogletest.ExpectEq("world", fi.Name())
+	ogletest.ExpectEq(len("Hello, world!"), fi.Size())
+	ogletest.ExpectEq(0444, fi.Mode())
+	ogletest.ExpectEq(0, t.Clock.Now().Sub(fi.ModTime()), "ModTime: %v", fi.ModTime())
+	ogletest.ExpectFalse(fi.IsDir())
+	ogletest.ExpectEq(1, fi.Sys().(*syscall.Stat_t).Nlink)
 }
 
 func (t *HelloFSTest) Stat_NonExistent() {
 	_, err := os.Stat(path.Join(t.Dir, "foobar"))
 
-	AssertNe(nil, err)
-	ExpectThat(err, Error(HasSubstr("no such file")))
+	ogletest.AssertNe(nil, err)
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("no such file")))
 }
 
 func (t *HelloFSTest) ReadFile_Hello() {
 	slice, err := ioutil.ReadFile(path.Join(t.Dir, "hello"))
 
-	AssertEq(nil, err)
-	ExpectEq("Hello, world!", string(slice))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq("Hello, world!", string(slice))
 }
 
 func (t *HelloFSTest) ReadFile_Dir() {
 	_, err := ioutil.ReadFile(path.Join(t.Dir, "dir"))
 
-	AssertNe(nil, err)
-	ExpectThat(err, Error(HasSubstr("is a directory")))
+	ogletest.AssertNe(nil, err)
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("is a directory")))
 }
 
 func (t *HelloFSTest) ReadFile_World() {
 	slice, err := ioutil.ReadFile(path.Join(t.Dir, "dir/world"))
 
-	AssertEq(nil, err)
-	ExpectEq("Hello, world!", string(slice))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq("Hello, world!", string(slice))
 }
 
 func (t *HelloFSTest) OpenAndRead() {
@@ -175,52 +175,52 @@ func (t *HelloFSTest) OpenAndRead() {
 	f, err := os.Open(path.Join(t.Dir, "hello"))
 	defer func() {
 		if f != nil {
-			ExpectEq(nil, f.Close())
+			ogletest.ExpectEq(nil, f.Close())
 		}
 	}()
 
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Seeking shouldn't affect the random access reads below.
 	_, err = f.Seek(7, 0)
-	AssertEq(nil, err)
+	ogletest.AssertEq(nil, err)
 
 	// Random access reads
 	n, err = f.ReadAt(buf[:2], 0)
-	AssertEq(nil, err)
-	ExpectEq(2, n)
-	ExpectEq("He", string(buf[:n]))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq(2, n)
+	ogletest.ExpectEq("He", string(buf[:n]))
 
 	n, err = f.ReadAt(buf[:2], int64(len("Hel")))
-	AssertEq(nil, err)
-	ExpectEq(2, n)
-	ExpectEq("lo", string(buf[:n]))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq(2, n)
+	ogletest.ExpectEq("lo", string(buf[:n]))
 
 	n, err = f.ReadAt(buf[:3], int64(len("Hello, wo")))
-	AssertEq(nil, err)
-	ExpectEq(3, n)
-	ExpectEq("rld", string(buf[:n]))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq(3, n)
+	ogletest.ExpectEq("rld", string(buf[:n]))
 
 	// Read beyond end.
 	n, err = f.ReadAt(buf[:3], int64(len("Hello, world")))
-	AssertEq(io.EOF, err)
-	ExpectEq(1, n)
-	ExpectEq("!", string(buf[:n]))
+	ogletest.AssertEq(io.EOF, err)
+	ogletest.ExpectEq(1, n)
+	ogletest.ExpectEq("!", string(buf[:n]))
 
 	// Seek then read the rest.
 	off, err = f.Seek(int64(len("Hel")), 0)
-	AssertEq(nil, err)
-	AssertEq(len("Hel"), off)
+	ogletest.AssertEq(nil, err)
+	ogletest.AssertEq(len("Hel"), off)
 
 	n, err = io.ReadFull(f, buf[:len("lo, world!")])
-	AssertEq(nil, err)
-	ExpectEq(len("lo, world!"), n)
-	ExpectEq("lo, world!", string(buf[:n]))
+	ogletest.AssertEq(nil, err)
+	ogletest.ExpectEq(len("lo, world!"), n)
+	ogletest.ExpectEq("lo, world!", string(buf[:n]))
 }
 
 func (t *HelloFSTest) Open_NonExistent() {
 	_, err := os.Open(path.Join(t.Dir, "foobar"))
 
-	AssertNe(nil, err)
-	ExpectThat(err, Error(HasSubstr("no such file")))
+	ogletest.AssertNe(nil, err)
+	ogletest.ExpectThat(err, oglematchers.Error(oglematchers.HasSubstr("no such file")))
 }
