@@ -39,11 +39,7 @@ jobs:
       id: go
     - name: Install fuse
       run: sudo apt-get update && sudo apt-get install -y fuse3 libfuse-dev
-    - name: Build
-      run: go build ./...
-    # Disabled running `go test` because running tests hung at random,
-    # preventing us from running the tests in CI reliably.
-    # (cf. https://github.com/jacobsa/fuse/issues/97)
+    - run: make check
 
   macos-build:
     runs-on: macos-latest
@@ -57,8 +53,4 @@ jobs:
       id: go
     - name: Install macfuse
       run: HOMEBREW_NO_AUTO_UPDATE=1 brew install macfuse
-    - name: Build
-      run: |
-        go build ./...
-        go build ./samples/mount_hello/... ./samples/mount_roloopbackfs/... ./samples/mount_sample/...
-    # Skip running tests as `go test` hung in macOS.
+    - run: make check
