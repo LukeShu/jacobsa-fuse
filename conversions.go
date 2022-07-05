@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	iofs "io/fs"
 	"reflect"
 	"syscall"
 	"time"
@@ -634,8 +635,15 @@ func (c *Connection) kernelResponse(
 
 		if !handled {
 			m.OutHeader().Error = -int32(syscall.EIO)
-			if errno, ok := opErr.(syscall.Errno); ok {
+			var errno syscall.Errno
+			if ok := errors.As(opErr, &errno); ok {
 				m.OutHeader().Error = -int32(errno)
+			} else if errors.Is(opErr, iofs.ErrPermission) {
+				m.OutHeader().Error = -int32(syscall.EPERM)
+			} else if errors.Is(opErr, iofs.ErrExist) {
+				m.OutHeader().Error = -int32(syscall.EEXIST)
+			} else if errors.Is(opErr, iofs.ErrClosed) {
+				m.OutHeader().Error = -int32(syscall.EBADF)
 			}
 
 			// Special case: for some types, convertInMessage grew the message in order
