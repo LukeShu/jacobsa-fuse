@@ -20,7 +20,7 @@ import (
 	"syscall"
 	"unsafe"
 
-	"github.com/jacobsa/fuse/internal/fusekernel"
+	"github.com/jacobsa/fuse/fusekernel"
 )
 
 // All requests read from the kernel, without data, are shorter than
