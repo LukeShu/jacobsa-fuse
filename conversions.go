@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"os"
 	"reflect"
 	"syscall"
 	"time"
@@ -81,7 +80,7 @@ func convertInMessage(
 		}
 
 		if valid&fusekernel.SetattrMode != 0 {
-			mode := convertFileMode(in.Mode)
+			mode := in.Mode
 			to.Mode = &mode
 		}
 
@@ -162,7 +161,7 @@ func convertInMessage(
 			// the fact that this is a directory is implicit in the fact that the
 			// opcode is mkdir. But we want the correct mode to go through, so ensure
 			// that os.ModeDir is set.
-			Mode:      convertFileMode(in.Mode) | os.ModeDir,
+			Mode:      in.Mode | 0o04_0000,
 			OpContext: fuseops.OpContext{Pid: inMsg.Header().Pid},
 		}
 
@@ -182,7 +181,7 @@ func convertInMessage(
 		o = &fuseops.MkNodeOp{
 			Parent:    fuseops.InodeID(inMsg.Header().Nodeid),
 			Name:      string(name),
-			Mode:      convertFileMode(in.Mode),
+			Mode:      in.Mode,
 			OpContext: fuseops.OpContext{Pid: inMsg.Header().Pid},
 		}
 
@@ -202,7 +201,7 @@ func convertInMessage(
 		o = &fuseops.CreateFileOp{
 			Parent:    fuseops.InodeID(inMsg.Header().Nodeid),
 			Name:      string(name),
-			Mode:      convertFileMode(in.Mode),
+			Mode:      in.Mode,
 			OpContext: fuseops.OpContext{Pid: inMsg.Header().Pid},
 		}
 
@@ -882,28 +881,7 @@ func convertAttributes(
 	out.Blocks = (in.Size + 512 - 1) / 512
 
 	// Set the mode.
-	out.Mode = uint32(in.Mode) & 0777
-	switch {
-	default:
-		out.Mode |= syscall.S_IFREG
-	case in.Mode&os.ModeDir != 0:
-		out.Mode |= syscall.S_IFDIR
-	case in.Mode&os.ModeDevice != 0:
-		if in.Mode&os.ModeCharDevice != 0 {
-			out.Mode |= syscall.S_IFCHR
-		} else {
-			out.Mode |= syscall.S_IFBLK
-		}
-	case in.Mode&os.ModeNamedPipe != 0:
-		out.Mode |= syscall.S_IFIFO
-	case in.Mode&os.ModeSymlink != 0:
-		out.Mode |= syscall.S_IFLNK
-	case in.Mode&os.ModeSocket != 0:
-		out.Mode |= syscall.S_IFSOCK
-	}
-	if in.Mode&os.ModeSetuid != 0 {
-		out.Mode |= syscall.S_ISUID
-	}
+	out.Mode = in.Mode
 }
 
 // Convert an absolute cache expiration time to a relative time from now for
@@ -931,36 +909,6 @@ func convertChildInodeEntry(
 	out.AttrValid, out.AttrValidNsec = convertExpirationTime(in.AttributesExpiration)
 
 	convertAttributes(in.Child, &in.Attributes, &out.Attr)
-}
-
-func convertFileMode(unixMode uint32) os.FileMode {
-	mode := os.FileMode(unixMode & 0777)
-	switch unixMode & syscall.S_IFMT {
-	case syscall.S_IFREG:
-		// nothing
-	case syscall.S_IFDIR:
-		mode |= os.ModeDir
-	case syscall.S_IFCHR:
-		mode |= os.ModeCharDevice | os.ModeDevice
-	case syscall.S_IFBLK:
-		mode |= os.ModeDevice
-	case syscall.S_IFIFO:
-		mode |= os.ModeNamedPipe
-	case syscall.S_IFLNK:
-		mode |= os.ModeSymlink
-	case syscall.S_IFSOCK:
-		mode |= os.ModeSocket
-	default:
-		// no idea
-		mode |= os.ModeDevice
-	}
-	if unixMode&syscall.S_ISUID != 0 {
-		mode |= os.ModeSetuid
-	}
-	if unixMode&syscall.S_ISGID != 0 {
-		mode |= os.ModeSetgid
-	}
-	return mode
 }
 
 func writeXattrSize(m *buffer.OutMessage, size uint32) {

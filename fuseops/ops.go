@@ -15,7 +15,6 @@
 package fuseops
 
 import (
-	"os"
 	"time"
 )
 
@@ -30,6 +29,8 @@ type OpContext struct {
 	// Not filled in case of a writepage operation.
 	Pid uint32
 }
+
+type FileMode = uint32
 
 // Return statistics about the file system's capacity and available resources.
 //
@@ -160,7 +161,7 @@ type SetInodeAttributesOp struct {
 
 	// The attributes to modify, or nil for attributes that don't need a change.
 	Size  *uint64
-	Mode  *os.FileMode
+	Mode  *FileMode
 	Atime *time.Time
 	Mtime *time.Time
 
@@ -267,7 +268,7 @@ type MkDirOp struct {
 
 	// The name of the child to create, and the mode with which to create it.
 	Name string
-	Mode os.FileMode
+	Mode FileMode
 
 	// Set by the file system: information about the inode that was created.
 	//
@@ -295,7 +296,7 @@ type MkNodeOp struct {
 
 	// The name of the child to create, and the mode with which to create it.
 	Name string
-	Mode os.FileMode
+	Mode FileMode
 
 	// Set by the file system: information about the inode that was created.
 	//
@@ -321,7 +322,7 @@ type CreateFileOp struct {
 
 	// The name of the child to create, and the mode with which to create it.
 	Name string
-	Mode os.FileMode
+	Mode FileMode
 
 	// Set by the file system: information about the inode that was created.
 	//
