@@ -19,8 +19,9 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"os/exec"
 	"syscall"
+
+	"github.com/datawire/dlib/dexec"
 )
 
 // Server is an interface for any type that knows how to serve ops read from a
@@ -46,17 +47,17 @@ func Mount(
 		joinStatusAvailable: make(chan struct{}),
 	}
 
-	// Begin the mounting process, which will continue in the background.
-	ready := make(chan error, 1)
-	dev, err := mount(dir, config, ready)
-	if err != nil {
-		return nil, fmt.Errorf("mount: %v", err)
-	}
-
 	// Choose a parent context for ops.
 	cfgCopy := *config
 	if cfgCopy.OpContext == nil {
 		cfgCopy.OpContext = context.Background()
+	}
+
+	// Begin the mounting process, which will continue in the background.
+	ready := make(chan error, 1)
+	dev, err := mount(cfgCopy.OpContext, dir, config, ready)
+	if err != nil {
+		return nil, fmt.Errorf("mount: %v", err)
 	}
 
 	// Create a Connection object wrapping the device.
@@ -84,7 +85,7 @@ func Mount(
 	return mfs, nil
 }
 
-func fusermount(binary string, argv []string, additionalEnv []string, wait bool) (*os.File, error) {
+func fusermount(ctx context.Context, binary string, argv []string, additionalEnv []string, wait bool) (*os.File, error) {
 	// Create a socket pair.
 	fds, err := syscall.Socketpair(syscall.AF_UNIX, syscall.SOCK_STREAM, 0)
 	if err != nil {
@@ -99,11 +100,10 @@ func fusermount(binary string, argv []string, additionalEnv []string, wait bool)
 	defer readFile.Close()
 
 	// Start fusermount/mount_macfuse/mount_osxfuse.
-	cmd := exec.Command(binary, argv...)
+	cmd := dexec.CommandContext(ctx, binary, argv...)
 	cmd.Env = append(os.Environ(), "_FUSE_COMMFD=3")
 	cmd.Env = append(cmd.Env, additionalEnv...)
 	cmd.ExtraFiles = []*os.File{writeFile}
-	cmd.Stderr = os.Stderr
 
 	// Run the command.
 	if wait {

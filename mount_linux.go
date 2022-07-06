@@ -1,6 +1,7 @@
 package fuse
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -104,7 +105,7 @@ func directmount(dir string, cfg *MountConfig) (*os.File, error) {
 // to the kernel. Mounting continues in the background, and is complete when an
 // error is written to the supplied channel. The file system may need to
 // service the connection in order for mounting to complete.
-func mount(dir string, cfg *MountConfig, ready chan<- error) (*os.File, error) {
+func mount(ctx context.Context, dir string, cfg *MountConfig, ready chan<- error) (*os.File, error) {
 	// On linux, mounting is never delayed.
 	ready <- nil
 
@@ -129,7 +130,7 @@ func mount(dir string, cfg *MountConfig, ready chan<- error) (*os.File, error) {
 			"--",
 			dir,
 		}
-		return fusermount(fusermountPath, argv, []string{}, true)
+		return fusermount(ctx, fusermountPath, argv, []string{}, true)
 	}
 	return dev, err
 }
