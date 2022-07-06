@@ -20,7 +20,6 @@ import (
 	"net"
 	"os"
 	"os/exec"
-	"strings"
 	"syscall"
 )
 
@@ -40,11 +39,6 @@ func Mount(
 	dir string,
 	server Server,
 	config *MountConfig) (*MountedFileSystem, error) {
-	// Sanity check: make sure the mount point exists and is a directory. This
-	// saves us from some confusing errors later on OS X.
-	if err := checkMountPoint(dir); err != nil {
-		return nil, err
-	}
 
 	// Initialize the struct.
 	mfs := &MountedFileSystem{
@@ -88,26 +82,6 @@ func Mount(
 	}
 
 	return mfs, nil
-}
-
-func checkMountPoint(dir string) error {
-	if strings.HasPrefix(dir, "/dev/fd") {
-		return nil
-	}
-
-	fi, err := os.Stat(dir)
-	switch {
-	case os.IsNotExist(err):
-		return err
-
-	case err != nil:
-		return fmt.Errorf("Statting mount point: %v", err)
-
-	case !fi.IsDir():
-		return fmt.Errorf("Mount point %s is not a directory", dir)
-	}
-
-	return nil
 }
 
 func fusermount(binary string, argv []string, additionalEnv []string, wait bool) (*os.File, error) {
